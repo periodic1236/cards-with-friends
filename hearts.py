@@ -1,13 +1,13 @@
 class hearts(trick_taking_game):
     def __init__(self):
         # Players of the game
-        self.players = [“alpha”, “beta”, “gamma”, “delta”]
+        self.players = ["alpha", "beta", "gamma", "delta"]
         # Hands of the players each round
-        self.hands = {“alpha”: Set([]), “beta”: Set([]), “gamma”: Set([]), “delta”: Set([])}
+        self.hands = {"alpha": Set([]), "beta": Set([]), "gamma": Set([]), "delta": Set([])}
         # Cards taken by each player each round
-        self.taken = {“alpha”: Set([]), “beta”: Set([]), “gamma”: Set([]), “delta”: Set([])}
+        self.taken = {"alpha": Set([]), "beta": Set([]), "gamma": Set([]), "delta": Set([])}
         # Cumulative score of each player
-        self.scores = self.hands = {“alpha”: 0, “beta”: 0, “gamma”: 0, “delta”: 0}
+        self.scores = self.hands = {"alpha": 0, "beta": 0, "gamma": 0, "delta": 0}
         # Deck of cards to use
         self.deck = standard_deck()
         # Round number
@@ -43,8 +43,9 @@ class hearts(trick_taking_game):
         return True
 
     def new_round():
-        self.hands = {“alpha”: Set([]), “beta”: Set([]), “gamma”: Set([]), “delta”: Set([])}
-        self.taken = {“alpha”: Set([]), “beta”: Set([]), “gamma”: Set([]), “delta”: Set([])}
+        for p in self.players:
+            self.hands[p] = Set([])
+            self.taken[p] = Set([])
         self.deck = standard_deck()
         self.round_num += 1
         self.state = {"hearts_broken": False, "trick_num": 0, "first_player": None, "cards_played": []}
@@ -61,7 +62,7 @@ class hearts(trick_taking_game):
     def get_first_player():
         # Find first player (has 2 of clubs)
         for i in range(4):
-            if (2, “C”) in self.hands[self.players[i]]:
+            if (2, "C") in self.hands[self.players[i]]:
                 return i
 
     def get_valid_play(player):
@@ -71,14 +72,14 @@ class hearts(trick_taking_game):
             while True:
                 card = select_card(player)
                 # Cannot play queen of spades if hearts not broken
-                if card == (12, “S”) and not self.state["hearts_broken"]:
+                if card == (12, "S") and not self.state["hearts_broken"]:
                     invalid_warning(card, player, "Hearts not broken")
                     continue
                 # Check if can play a heart
-                elif card[1] == “H” and not self.state["hearts_broken"]:
+                elif card[1] == "H" and not self.state["hearts_broken"]:
                     # If the player has only hearts, playing a heart is valid
                     for c in self.hands[player]:
-                        if c[1] != “H”: break
+                        if c[1] != "H": break
                     else: 
                         self.state["hearts_broken"] = True
                         self.hands[player].remove(card)
@@ -103,7 +104,7 @@ class hearts(trick_taking_game):
                         # Cannot play heart the first trick, unless hand is all hearts
                         elif card[1] == "H" and self.state["trick_num"] == 0:
                             for c in self.hands[player]:
-                                if c[1] != “H”: break
+                                if c[1] != "H": break
                             else: 
                                 self.state["hearts_broken"] = True
                                 self.hands[player].remove(card)
