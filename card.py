@@ -7,21 +7,21 @@ class Card:
     self._image_loc = image_loc
     self._properties = dict(zip(labels,values))
 
-  def getShortName(self):
+  def GetShortName(self):
     return self._short_name
-  short_name = property(getShortName)
+  short_name = property(GetShortName)
 
-  def getLongName(self):
+  def GetLongName(self):
     return self._long_name
-  long_name = property(getLongName)
+  long_name = property(GetLongName)
 
-  def getImageLoc(self):
-    return self._image_loc
-  image_loc = property(getImageLoc)
+  def GetImageLoc(self):
+    return 'card-images/' + self._image_loc
+  image_loc = property(GetImageLoc)
 
-  def getProperties(self):
+  def GetProperties(self):
     return self._properties
-  properties = property(getProperties)
+  properties = property(GetProperties)
 
-  def getImage(self):
-    return Image.open(self._image_loc)
+  def GetImage(self):
+    return Image.open('card-images/' + self._image_loc)
