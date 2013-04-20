@@ -1,0 +1,82 @@
+{
+    "name": "test",
+    "type": "deck",
+    "long_name": "Small Test Deck",
+    "back_image_loc": "std_back_fv.png",
+    "labels": [
+        {
+            "name": "suit",
+            "type": "string"
+        },
+        {
+            "name": "number",
+            "type": "integer"
+        }
+    ],
+    "cards": [
+        {
+            "name": "As",
+            "type": "card",
+            "long_name": "Ace of Spades",
+            "suit": "spades",
+            "number": 1,
+            "image_loc": "std_A_S.png"
+        },
+        {
+            "name": "Ac",
+            "type": "card",
+            "long_name": "Ace of Clubs",
+            "suit": "clubs",
+            "number": 1,
+            "image_loc": "std_A_C.png"
+        },
+        {
+            "name": "Ad",
+            "type": "card",
+            "long_name": "Ace of Diamonds",
+            "suit": "diamonds",
+            "number": 1,
+            "image_loc": "std_A_D.png"
+        },
+        {
+            "name": "Ah",
+            "type": "card",
+            "long_name": "Ace of Hearts",
+            "suit": "hearts",
+            "number": 1,
+            "image_loc": "std_A_H.png"
+        },
+        {
+            "name": "2s",
+            "type": "card",
+            "long_name": "Two of Spades",
+            "suit": "spades",
+            "number": 2,
+            "image_loc": "std_2_S.png"
+        },
+        {
+            "name": "2c",
+            "type": "card",
+            "long_name": "Two of Clubs",
+            "suit": "clubs",
+            "number": 2,
+            "image_loc": "std_2_C.png"
+        },
+        {
+            "name": "2d",
+            "type": "card",
+            "long_name": "Two of Diamonds",
+            "suit": "diamonds",
+            "number": 2,
+            "image_loc": "std_2_D.png"
+        },
+        {
+            "name": "2h",
+            "type": "card",
+            "long_name": "Two of Hearts",
+            "suit": "hearts",
+            "number": 2,
+            "image_loc": "std_2_H.png"
+        }
+    ]
+}
