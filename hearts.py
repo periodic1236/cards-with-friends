@@ -7,16 +7,16 @@ class hearts(trick_taking_game):
         # Cards taken by each player each round
         self.taken = {"alpha": Set([]), "beta": Set([]), "gamma": Set([]), "delta": Set([])}
         # Cumulative score of each player
-        self.scores = self.hands = {"alpha": 0, "beta": 0, "gamma": 0, "delta": 0}
+        self.scores = {"alpha": 0, "beta": 0, "gamma": 0, "delta": 0}
         # Deck of cards to use
         self.deck = standard_deck()
         # Round number
         self.round_num = 0
-        # State of game each round. In this case, (hearts broken, trick number, cards played)
+        # State of game each round. In this case, (hearts broken, trick number, first player, cards played)
         self.state = {"hearts_broken": False, "trick_num": 0, "first_player": None, "cards_played": []}
 
     def play_game(self):
-        # Play until someone’s score is >= 100
+        # Play until someone's score is >= 100
         while not terminate_game():
             # Reset hands, shuffle and deal cards
             new_round()
@@ -122,6 +122,7 @@ class hearts(trick_taking_game):
 
         return card
 
+    # David needs to fix this function
     def give_cards_to_trick_taker():
         for i in range(1, 4):
             if cards_played[i][1] == cards_played[trick_taker][1] and cards_played[i][0] > cards_played[trick_taker][0]: trick_taker = i
