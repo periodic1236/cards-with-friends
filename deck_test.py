@@ -15,7 +15,7 @@ if __name__ == "__main__":
   assert(d.long_name == "Small Test Deck")
   d.get_back_image().show()
   initial_cards_list = d._cards_list[:]
-  print [i.short_name for i in initial_cards_list]
+  print [i.name for i in initial_cards_list]
   d.shuffle()
   new_cards_list = d._cards_list[:]
-  print [i.short_name for i in new_cards_list]
+  print [i.name for i in new_cards_list]

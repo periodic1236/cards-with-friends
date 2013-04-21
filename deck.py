@@ -6,6 +6,7 @@
 
 __author__ = "razon.ben@gmail.com (Ben Razon)"
 
+import collections
 import json
 import os
 import random
@@ -29,7 +30,7 @@ class Deck(object):
     self._long_name = long_name
     self._num_cards = len(cards)
     self._back_image_loc = back_image_loc
-    self._cards_list = [None] * self._num_cards
+    self._cards_list = collections.deque([None] * self._num_cards)
     for i in xrange(self._num_cards):
       card = cards[i]
       self._cards_list[i] = Card(card[0], card[1], card[2], labels, card[3])
@@ -57,15 +58,20 @@ class Deck(object):
   def get_back_image(self):
     return Image.open(self.back_image_loc)
 
-  def get_next_card(self, num_cards=0):
-    """Remove and return the top card from the deck.
+  def get_next_card(self, num_cards=1):
+    """Remove and return the top num_card cards from the deck (default 1).
 
-    This also updates num_cards.
+    If num_cards > 1, then a list is returned. This also updates num_cards.
     """
-    if self._num_cards <= 0:
-      raise IndexError("Tried to get card from empty deck.")
-    self._num_cards -= 1
-    return self._cards_list.pop(0)
+    if num_cards < 1:
+      raise ValueError("num_cards must be positive, got: %d" % num_cards)
+    if self.num_cards < num_cards:
+      raise IndexError("Tried to draw %d cards, but deck only has %d." % 
+                       (num_cards, self.num_cards))
+    self._num_cards -= num_cards
+    if num_cards > 1:
+      return [self._cards_list.popleft() for _ in xrange(num_cards)]
+    return self._cards_list.popleft()
 
   def shuffle(self):
     random.shuffle(self._cards_list)
@@ -79,7 +85,7 @@ class Deck(object):
 
   @property
   def back_image_loc(self):
-    return os.path.join("card-images", os.path.basename(self._back_image_loc))
+    return os.path.join("card_images", os.path.basename(self._back_image_loc))
 
   @property
   def long_name(self):
