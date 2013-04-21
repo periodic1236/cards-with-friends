@@ -1,0 +1,434 @@
+{
+    "name": "standard",
+    "type": "deck",
+    "long_name": "Standard 52-Card Deck",
+    "back_image_loc": "std_back_fv.png",
+    "labels": [
+        {
+            "name": "suit",
+            "type": "string"
+        },
+        {
+            "name": "number",
+            "type": "integer"
+        }
+    ],
+    "cards": [
+        {
+            "name": "AS",
+            "type": "card",
+            "long_name": "Ace of Spades",
+            "suit": "spades",
+            "number": 1,
+            "image_loc": "std_A_S.png"
+        },
+        {
+            "name": "AC",
+            "type": "card",
+            "long_name": "Ace of Clubs",
+            "suit": "clubs",
+            "number": 1,
+            "image_loc": "std_A_C.png"
+        },
+        {
+            "name": "AD",
+            "type": "card",
+            "long_name": "Ace of Diamonds",
+            "suit": "diamonds",
+            "number": 1,
+            "image_loc": "std_A_D.png"
+        },
+        {
+            "name": "AH",
+            "type": "card",
+            "long_name": "Ace of Hearts",
+            "suit": "hearts",
+            "number": 1,
+            "image_loc": "std_A_H.png"
+        },
+        {
+            "name": "2S",
+            "type": "card",
+            "long_name": "Two of Spades",
+            "suit": "spades",
+            "number": 2,
+            "image_loc": "std_2_S.png"
+        },
+        {
+            "name": "2C",
+            "type": "card",
+            "long_name": "Two of Clubs",
+            "suit": "clubs",
+            "number": 2,
+            "image_loc": "std_2_C.png"
+        },
+        {
+            "name": "2D",
+            "type": "card",
+            "long_name": "Two of Diamonds",
+            "suit": "diamonds",
+            "number": 2,
+            "image_loc": "std_2_D.png"
+        },
+        {
+            "name": "2H",
+            "type": "card",
+            "long_name": "Two of Hearts",
+            "suit": "hearts",
+            "number": 2,
+            "image_loc": "std_2_H.png"
+        },
+        {
+            "name": "3S",
+            "type": "card",
+            "long_name": "Three of Spades",
+            "suit": "spades",
+            "number": 3,
+            "image_loc": "std_3_S.png"
+        },
+        {
+            "name": "3C",
+            "type": "card",
+            "long_name": "Three of Clubs",
+            "suit": "clubs",
+            "number": 3,
+            "image_loc": "std_3_C.png"
+        },
+        {
+            "name": "3D",
+            "type": "card",
+            "long_name": "Three of Diamonds",
+            "suit": "diamonds",
+            "number": 3,
+            "image_loc": "std_3_D.png"
+        },
+        {
+            "name": "3H",
+            "type": "card",
+            "long_name": "Three of Hearts",
+            "suit": "hearts",
+            "number": 3,
+            "image_loc": "std_3_H.png"
+        },
+        {
+            "name": "4S",
+            "type": "card",
+            "long_name": "Four of Spades",
+            "suit": "spades",
+            "number": 4,
+            "image_loc": "std_4_S.png"
+        },
+        {
+            "name": "4C",
+            "type": "card",
+            "long_name": "Four of Clubs",
+            "suit": "clubs",
+            "number": 4,
+            "image_loc": "std_4_C.png"
+        },
+        {
+            "name": "4D",
+            "type": "card",
+            "long_name": "Four of Diamonds",
+            "suit": "diamonds",
+            "number": 4,
+            "image_loc": "std_4_D.png"
+        },
+        {
+            "name": "4H",
+            "type": "card",
+            "long_name": "Four of Hearts",
+            "suit": "hearts",
+            "number": 4,
+            "image_loc": "std_4_H.png"
+        },
+        {
+            "name": "5S",
+            "type": "card",
+            "long_name": "Five of Spades",
+            "suit": "spades",
+            "number": 5,
+            "image_loc": "std_5_S.png"
+        },
+        {
+            "name": "5C",
+            "type": "card",
+            "long_name": "Five of Clubs",
+            "suit": "clubs",
+            "number": 5,
+            "image_loc": "std_5_C.png"
+        },
+        {
+            "name": "5D",
+            "type": "card",
+            "long_name": "Five of Diamonds",
+            "suit": "diamonds",
+            "number": 5,
+            "image_loc": "std_5_D.png"
+        },
+        {
+            "name": "5H",
+            "type": "card",
+            "long_name": "Five of Hearts",
+            "suit": "hearts",
+            "number": 5,
+            "image_loc": "std_5_H.png"
+        },
+        {
+            "name": "6S",
+            "type": "card",
+            "long_name": "Six of Spades",
+            "suit": "spades",
+            "number": 6,
+            "image_loc": "std_6_S.png"
+        },
+        {
+            "name": "6C",
+            "type": "card",
+            "long_name": "Six of Clubs",
+            "suit": "clubs",
+            "number": 6,
+            "image_loc": "std_6_C.png"
+        },
+        {
+            "name": "6D",
+            "type": "card",
+            "long_name": "Six of Diamonds",
+            "suit": "diamonds",
+            "number": 6,
+            "image_loc": "std_6_D.png"
+        },
+        {
+            "name": "6H",
+            "type": "card",
+            "long_name": "Six of Hearts",
+            "suit": "hearts",
+            "number": 6,
+            "image_loc": "std_6_H.png"
+        },
+        {
+            "name": "7S",
+            "type": "card",
+            "long_name": "Seven of Spades",
+            "suit": "spades",
+            "number": 7,
+            "image_loc": "std_7_S.png"
+        },
+        {
+            "name": "7C",
+            "type": "card",
+            "long_name": "Seven of Clubs",
+            "suit": "clubs",
+            "number": 7,
+            "image_loc": "std_7_C.png"
+        },
+        {
+            "name": "7D",
+            "type": "card",
+            "long_name": "Seven of Diamonds",
+            "suit": "diamonds",
+            "number": 7,
+            "image_loc": "std_7_D.png"
+        },
+        {
+            "name": "7H",
+            "type": "card",
+            "long_name": "Seven of Hearts",
+            "suit": "hearts",
+            "number": 7,
+            "image_loc": "std_7_H.png"
+        },
+        {
+            "name": "8S",
+            "type": "card",
+            "long_name": "Eight of Spades",
+            "suit": "spades",
+            "number": 8,
+            "image_loc": "std_8_S.png"
+        },
+        {
+            "name": "8C",
+            "type": "card",
+            "long_name": "Eight of Clubs",
+            "suit": "clubs",
+            "number": 8,
+            "image_loc": "std_8_C.png"
+        },
+        {
+            "name": "8D",
+            "type": "card",
+            "long_name": "Eight of Diamonds",
+            "suit": "diamonds",
+            "number": 8,
+            "image_loc": "std_8_D.png"
+        },
+        {
+            "name": "8H",
+            "type": "card",
+            "long_name": "Eight of Hearts",
+            "suit": "hearts",
+            "number": 8,
+            "image_loc": "std_8_H.png"
+        },
+        {
+            "name": "9S",
+            "type": "card",
+            "long_name": "Nine of Spades",
+            "suit": "spades",
+            "number": 9,
+            "image_loc": "std_9_S.png"
+        },
+        {
+            "name": "9C",
+            "type": "card",
+            "long_name": "Nine of Clubs",
+            "suit": "clubs",
+            "number": 9,
+            "image_loc": "std_9_C.png"
+        },
+        {
+            "name": "9D",
+            "type": "card",
+            "long_name": "Nine of Diamonds",
+            "suit": "diamonds",
+            "number": 9,
+            "image_loc": "std_9_D.png"
+        },
+        {
+            "name": "9H",
+            "type": "card",
+            "long_name": "Nine of Hearts",
+            "suit": "hearts",
+            "number": 9,
+            "image_loc": "std_9_H.png"
+        },
+        {
+            "name": "10S",
+            "type": "card",
+            "long_name": "Ten of Spades",
+            "suit": "spades",
+            "number": 10,
+            "image_loc": "std_10_S.png"
+        },
+        {
+            "name": "10C",
+            "type": "card",
+            "long_name": "Ten of Clubs",
+            "suit": "clubs",
+            "number": 10,
+            "image_loc": "std_10_C.png"
+        },
+        {
+            "name": "10D",
+            "type": "card",
+            "long_name": "Ten of Diamonds",
+            "suit": "diamonds",
+            "number": 10,
+            "image_loc": "std_10_D.png"
+        },
+        {
+            "name": "10H",
+            "type": "card",
+            "long_name": "Ten of Hearts",
+            "suit": "hearts",
+            "number": 10,
+            "image_loc": "std_10_H.png"
+        },
+        {
+            "name": "JS",
+            "type": "card",
+            "long_name": "Jack of Spades",
+            "suit": "spades",
+            "number": 11,
+            "image_loc": "std_J_S.png"
+        },
+        {
+            "name": "JC",
+            "type": "card",
+            "long_name": "Jack of Clubs",
+            "suit": "clubs",
+            "number": 11,
+            "image_loc": "std_J_C.png"
+        },
+        {
+            "name": "JD",
+            "type": "card",
+            "long_name": "Jack of Diamonds",
+            "suit": "diamonds",
+            "number": 11,
+            "image_loc": "std_J_D.png"
+        },
+        {
+            "name": "JH",
+            "type": "card",
+            "long_name": "Jack of Hearts",
+            "suit": "hearts",
+            "number": 11,
+            "image_loc": "std_J_H.png"
+        },
+        {
+            "name": "QS",
+            "type": "card",
+            "long_name": "Queen of Spades",
+            "suit": "spades",
+            "number": 12,
+            "image_loc": "std_Q_S.png"
+        },
+        {
+            "name": "QC",
+            "type": "card",
+            "long_name": "Queen of Clubs",
+            "suit": "clubs",
+            "number": 12,
+            "image_loc": "std_Q_C.png"
+        },
+        {
+            "name": "QD",
+            "type": "card",
+            "long_name": "Queen of Diamonds",
+            "suit": "diamonds",
+            "number": 12,
+            "image_loc": "std_Q_D.png"
+        },
+        {
+            "name": "QH",
+            "type": "card",
+            "long_name": "Queen of Hearts",
+            "suit": "hearts",
+            "number": 12,
+            "image_loc": "std_Q_H.png"
+        },
+        {
+            "name": "KS",
+            "type": "card",
+            "long_name": "King of Spades",
+            "suit": "spades",
+            "number": 13,
+            "image_loc": "std_K_S.png"
+        },
+        {
+            "name": "KC",
+            "type": "card",
+            "long_name": "King of Clubs",
+            "suit": "clubs",
+            "number": 13,
+            "image_loc": "std_K_C.png"
+        },
+        {
+            "name": "KD",
+            "type": "card",
+            "long_name": "King of Diamonds",
+            "suit": "diamonds",
+            "number": 13,
+            "image_loc": "std_K_D.png"
+        },
+        {
+            "name": "KH",
+            "type": "card",
+            "long_name": "King of Hearts",
+            "suit": "hearts",
+            "number": 13,
+            "image_loc": "std_K_H.png"
+        }
+    ]
+}
