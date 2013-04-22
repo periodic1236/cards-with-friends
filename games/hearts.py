@@ -1,148 +1,193 @@
-class hearts(trick_taking_game):
-    def __init__(self):
-        # Players of the game
-        self.players = ["alpha", "beta", "gamma", "delta"]
-        # Hands of the players each round
-        self.hands = {"alpha": Set([]), "beta": Set([]), "gamma": Set([]), "delta": Set([])}
-        # Cards taken by each player each round
-        self.taken = {"alpha": Set([]), "beta": Set([]), "gamma": Set([]), "delta": Set([])}
-        # Cumulative score of each player
-        self.scores = {"alpha": 0, "beta": 0, "gamma": 0, "delta": 0}
-        # Deck of cards to use
-        self.deck = standard_deck()
-        # Round number
-        self.round_num = 0
-        # State of game each round. In this case, (hearts broken, trick number, first player, cards played)
-        self.state = {"hearts_broken": False, "trick_num": 0, "first_player": None, "cards_played": []}
+#!/usr/bin/env python2.7
+#
+# Copyright 2013 Cards with Friends LLC. All Rights Reserved.
 
-    def play_game(self):
-        # Play until someone's score is >= 100
-        while not terminate_game():
-            # Reset hands, shuffle and deal cards
-            new_round()
-            # Pass cards left, right, across, or not at all based on the round number
-            pass_cards()
-            # Identify first player of the round
-            self.state["first_player"] = get_first_player()
-            # Play 13 tricks
-            for trick_num in range(13):
-                self.state["trick_num"] = trick_num
-                self.state["cards_played"] = []
-                # Have each player play a valid card for the trick
-                for i in range(4):
-                    self.state["cards_played"].append(get_valid_play(self.players[(first_player + i) % 4]))
-                # Determine who got the trick, and give them the cards
-                give_cards_to_trick_taker()
-            # Calculate and add scores
-            score_round()
-        return self.scores
+"""Implementation of the Hearts trick-taking card game."""
 
-    def terminate_game():
-        if max(self.scores.values()) <= 100:
-            return False
-        return True
+__author__ = "ding@caltech.edu (David Ding)"
 
-    def new_round():
-        for p in self.players:
-            self.hands[p] = Set([])
-            self.taken[p] = Set([])
-        self.deck = standard_deck()
-        self.round_num += 1
-        self.state = {"hearts_broken": False, "trick_num": 0, "first_player": None, "cards_played": []}
+from ..trick_taking_game import TrickTakingGame
 
-        self.deck.shuffle()
-        deal_cards(self.players, self.hands, self.deck)
 
-    def pass_cards():
-        if self.round_num % 4 == 1: pass_cards([self.players[0], self.players[1], 3], [self.players[1], self.players[2], 3], [self.players[2], self.players[3], 3], [self.players[3], self.players[0], 3])
-        elif self.round_num % 4 == 2: pass_cards([self.players[0], self.players[3], 3], [self.players[1], self.players[0], 3], [self.players[2], self.players[1], 3], [self.players[3], self.players[2], 3])
-        elif self.round_num % 4 == 3: pass_cards([self.players[0], self.players[2], 3], [self.players[1], self.players[3], 3], [self.players[2], self.players[0], 3], [self.players[3], self.players[1], 3])
-        elif self.round_num % 4 == 0: pass
+# TODO(ding): After a standard way of referencing cards has been chosen, change
+# this code accordingly.
+class Hearts(TrickTakingGame):
+  """The Hearts card game."""
 
-    def get_first_player():
-        # Find first player (has 2 of clubs)
-        for i in range(4):
-            if (2, "C") in self.hands[self.players[i]]:
-                return i
+  def __init__(self, players, deck=None):
+    # Invoke superclass constructor.
+    super(Hearts, self).__init__(players, deck or "standard")
+    # Initialize scores.
+    for player in self.players:
+      player.score = 0
 
-    def get_valid_play(player):
-        card = None
-        # If the play is the first play of the trick
-        if len(self.state["cards_played"]) == 0:
-            while True:
-                card = select_card(player)
-                # Cannot play queen of spades if hearts not broken
-                if card == (12, "S") and not self.state["hearts_broken"]:
-                    invalid_warning(card, player, "Hearts not broken")
-                    continue
-                # Check if can play a heart
-                elif card[1] == "H" and not self.state["hearts_broken"]:
-                    # If the player has only hearts, playing a heart is valid
-                    for c in self.hands[player]:
-                        if c[1] != "H": break
-                    else: 
-                        self.state["hearts_broken"] = True
-                        self.hands[player].remove(card)
-                        break
-                    invalid_warning(card, first_player, "Hearts not broken")
-                    continue
-                # If the card selected is not the queen of spades or a heart, the play is fine
-                self.hands[player].remove(card)
+    # Round number
+    self._round_num = 0
+    # State of game each round
+    self._state = {
+        "cards_played": [],
+        "first_player": None,
+        "hearts_broken": False,
+        "trick_num": 0,
+    }
+
+  def PlayGame(self):
+    # Play until someone's score is >= 100
+    while not self.IsTerminal():
+      # Reset hands, shuffle and deal cards
+      self.NewRound()
+      # Pass cards left, right, across, or not at all based on the round number
+      self.TradePhase()
+      # Identify first player of the round
+      self.state["first_player"] = self.GetFirstPlayer()
+      # Play 13 tricks
+      for trick_num in xrange(13):
+        self.state["trick_num"] = trick_num
+        self.state["cards_played"] = []
+        # Have each player play a valid card for the trick
+        # TODO(ding): Change loop syntax after the other classes have settled down a bit
+        for i in xrange(4):
+          self.state["cards_played"].append(self.get_valid_play(self.players.keys()[(first_player + i) % 4]))
+        # Determine who got the trick, and give them the cards
+        self.give_cards_to_trick_taker()
+      # Calculate and add scores
+      self.score_round()
+    return [player.score for player in self.players]
+
+  def IsTerminal():
+    if max([player.score for player in self.players]) >= 100:
+      return True
+    return False
+
+  def NewRound():
+    for player in self.players:
+      player.reset_hand()
+      player.reset_taken()
+    self.deck = standard_deck()
+    self.round_num += 1
+    self.state = {"hearts_broken": False, "trick_num": 0, "first_player": None, "cards_played": []}
+
+    self.deck.shuffle()
+    # TODO(ding): Figure out how to reference players by index here
+    self.deal_cards(self.players[], [(13, [1, 1, 1, 1])])
+
+  # TODO(ding): Discuss with mqian about adding a PassCards function to TrickTakingGame
+  def TradePhase():
+    if self.round_num % 4 == 1:
+      PassCards([self.players[0], self.players[1], 3],
+                [self.players[1], self.players[2], 3],
+                [self.players[2], self.players[3], 3],
+                [self.players[3], self.players[0], 3])
+    elif self.round_num % 4 == 2:
+      PassCards([self.players[0], self.players[3], 3],
+                [self.players[1], self.players[0], 3],
+                [self.players[2], self.players[1], 3],
+                [self.players[3], self.players[2], 3])
+    elif self.round_num % 4 == 3:
+      PassCards([self.players[0], self.players[2], 3],
+                [self.players[1], self.players[3], 3],
+                [self.players[2], self.players[0], 3],
+                [self.players[3], self.players[1], 3])
+    elif self.round_num % 4 == 0:
+      pass
+
+  def GetFirstPlayer():
+    # Find first player (has 2 of clubs)
+    for player in self.players:
+      if "2C" in player.hand:
+        return player
+
+  def get_valid_play(player):
+    card = None
+    # If the play is the first play of the trick
+    if len(self.state["cards_played"]) == 0:
+      while True:
+        card = player.play()
+        # Cannot play queen of spades if hearts not broken
+        if card == ("QS") and not self.state["hearts_broken"]:
+          invalid_warning(card, player, "Hearts not broken")
+          player.hand.add(card)
+          continue
+        # Check if can play a heart
+        elif card[-1] == "H" and not self.state["hearts_broken"]:
+          # If the player has only hearts, playing a heart is valid
+          for c in player.hand.elements():
+            if c[-1] != "H": 
+              break
+          else: 
+            self.state["hearts_broken"] = True
+            break
+          invalid_warning(card, first_player, "Hearts not broken")
+          player.hand.add(card)
+          continue
+        # If the card selected is not the queen of spades or a heart, the play is fine
+        break
+    else:
+      while True:
+        card = player.play()
+        # Must follow suit if possible
+        if card[1] != self.state["cards_played"][0][1]:
+          for c in player.hand.elements():
+            if c[1] == self.state["cards_played"][0][1]: break
+          else: 
+            # Cannot play queen of spades the first trick
+            if card == ("QS") and self.state["trick_num"] == 0:
+              invalid_warning(card, self.players[player], "Hearts not broken")
+              player.hand.add(card)
+              continue
+            # Cannot play heart the first trick, unless hand is all hearts
+            elif card[-1] == "H" and self.state["trick_num"] == 0:
+              for c in player.hand.elements():
+                if c[-1] != "H": break
+              else: 
+                self.state["hearts_broken"] = True
                 break
-        else:
-            while True:
-                card = select_card(player)
-                # Must follow suit if possible
-                if card[1] != self.state["cards_played"][0][1]:
-                    for c in self.hands[player]:
-                        if c[1] == self.state["cards_played"][0][1]: break
-                    else: 
-                        # Cannot play queen of spades the first trick
-                        if card == (12, "S") and self.state["trick_num"] == 0:
-                            invalid_warning(card, self.players[player], "Hearts not broken")
-                            continue
-                        # Cannot play heart the first trick, unless hand is all hearts
-                        elif card[1] == "H" and self.state["trick_num"] == 0:
-                            for c in self.hands[player]:
-                                if c[1] != "H": break
-                            else: 
-                                self.state["hearts_broken"] = True
-                                self.hands[player].remove(card)
-                                break
-                            invalid_warning(card, player, "Cannot play a heart on the first trick")
-                            continue
-                        elif card[1] == "H" and not self.state["hearts_broken"]: self.state["hearts_broken"] = True
-                        self.hands[first_player].remove(card)
-                        break
-                    invalid_warning(card, self.players[player], "Must follow suit")
-                    continue
-                # If the suit matches, the play is valid
-                self.hands[first_player].remove(card)
-                break
+              invalid_warning(card, player, "Cannot play a heart on the first trick")
+              player.hand.add(card)
+              continue
+            elif card[1] == "H" and not self.state["hearts_broken"]: self.state["hearts_broken"] = True
+            break
+          invalid_warning(card, self.players[player], "Must follow suit")
+          player.hand.add(card)
+          continue
+        # If the suit matches, the play is valid
+        break
 
-        return card
+    return card
 
-    # David needs to fix this function
-    def give_cards_to_trick_taker():
-        for i in range(1, 4):
-            if cards_played[i][1] == cards_played[trick_taker][1] and cards_played[i][0] > cards_played[trick_taker][0]: trick_taker = i
-        self.taken[self.players[trick_taker]].update(cards_played)
+  # TODO(ding): Fix this function once the syntax for cards is standardized
+  def give_cards_to_trick_taker():
+    trick_taker = 0
+    for i in xrange(1, 4):
+      if cards_played[i][1] == cards_played[trick_taker][1] and cards_played[i][0] > cards_played[trick_taker][0]: trick_taker = i
+    self.taken[self.players[trick_taker]].update(cards_played)
 
-    def score_round():
-        # Update scores, taking shooting the moon into account
-        curr_round_scores = {}
-        for p in self.players:
-            curr_round_scores[p] = 0
-        for p in self.players:
-            for c in self.taken[p]:
-                if c == (12, "S"): curr_round_scores[p] += 13
-                elif c[1] == "H": curr_round_scores[p] += 1
+  def score_round():
+    # Update scores, taking shooting the moon into account
+    curr_round_scores = {}
+    for player in self.players:
+      curr_round_scores[player] = 0
+    for player in self.players:
+      for c in player.taken:
+        if c == ("QS"): curr_round_scores[p] += 13
+        elif c[-1] == "H": curr_round_scores[p] += 1
 
-        if max(curr_round_scores.values()) == 26:
-            for p in self.players:
-                if curr_round_scores[p] != 26:
-                    self.scores[p] += 26
-        else:
-            for p in self.players:
-                self.scores[p] += curr_round_scores[p]
+    if max(curr_round_scores.values()) == 26:
+      for player in self.players:
+        if curr_round_scores[p] != 26:
+          player.score += 26
+    else:
+      for player in self.players:
+        player.score += curr_round_scores[p]
 
+  @property
+  def round_num(self):
+    return self._round_num
+        
+  @property
+  def state(self):
+    return self._state
+
+
+if __name__ == "__main__":
+  pass

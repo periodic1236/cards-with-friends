@@ -31,11 +31,14 @@ class Deck(collections.Iterator):
     self._name = name
     self._long_name = long_name
     self._back_image_loc = utils.CheckPath(_CARD_IMAGE_BASE, back_image_loc)
-    self._cards = {}
+    self._cards = collections.Counter()
     self._deck = []
 
   def __len__(self):
     return len(self._deck)
+
+  def __nonzero__(self):
+    return bool(self._deck)
 
   @classmethod
   def fromjson(cls, filename):
@@ -63,9 +66,8 @@ class Deck(collections.Iterator):
     return self._deck.pop()
 
   def _AddCard(self, name, long_name, image_loc, **props):
-    if name in self._cards:
-      raise KeyError("Card already exists: %s" % name)
-    self._cards[name] = Card(name, long_name, image_loc, **props)
+    card = Card(name, long_name, image_loc, **props)
+    self._cards[card] += 1
 
   def Draw(self, num_cards=1):
     """Remove and return the top num_card cards from the deck (default 1).
@@ -86,7 +88,7 @@ class Deck(collections.Iterator):
 
   def Shuffle(self, reset=True):
     if reset:
-      self._deck = self._cards.values()
+      self._deck = list(self._cards.elements())
     random.shuffle(self._deck)
 
   def WriteToFile(self, filename, indent=2):

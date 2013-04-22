@@ -26,10 +26,10 @@ def Player(object):
   def ClearTaken(self):
     self._taken.clear()
 
-  def GetBet(self):
-    # TODO(brazon): Interact with front-end to get bet.
-    bet = None
-    return bet
+  def GetBid(self):
+    # TODO(brazon): Interact with front-end to get bid
+    bid = None
+    return bid
 
   def GetPlay(self):
     # TODO(brazon): Interact with front-end to get card.
@@ -71,24 +71,32 @@ class Hand(object):
   def __contains__(self, item):
     if not isinstance(item, Card):
       return False
-    return bool(self._cards[card])
+    return bool(self.GetCount(card))
 
   def Add(self, *cards):
     """Add one or more cards to the player's hand."""
-    for card in cards:
-      self._cards[card] += 1
+    if not all(isinstance(item, Card) for item in cards):
+      # TODO(mqian): Raise a more meaningful error.
+      raise TypeError
+    self._cards.update(cards)
+    return True
 
   def Clear(self):
     """Remove all cards from the player's hand."""
     self._cards.clear()
 
+  def GetCount(self, card):
+    """Return the count of a given card in a player's hand."""
+    return self._cards[card]
+
   def Remove(self, *cards):
     """Remove one or more cards from the player's hand."""
-    if not all(card in self for card in cards):
-      # TODO(mqian): Raise a more meaningful error.
-      raise KeyError
-    for card in cards:
-      self._cards[card] -= 1
+    temp = Counter(cards)
+    for card, cnt in temp.elements():
+      if self.GetCount(card) < cnt:
+        # TODO(mqian): Raise a more meaningful error.
+        raise ValueError
+    self._cards.subtract(temp)
     return True
 
 

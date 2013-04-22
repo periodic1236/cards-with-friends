@@ -7,6 +7,7 @@
 __author__ = "ding@caltech.edu (David Ding)"
 
 import collections
+import uuid
 from player import Player
 from pylib import utils
 
@@ -14,21 +15,29 @@ from pylib import utils
 class Game(object):
   """A card game."""
 
-  def __init__(self, deck, players):
+  def __init__(self, players, deck):
     """Constructor.
 
     Args:
-      deck: The name of the deck for this game.
       players: A sequence containing player names.
+      deck: The name of the deck for this game.
     """
-    # The deck of cards to use
+    # A unique ID for the game.
+    self._id = uuid.uuid1()
+
+    # The deck of cards to use.
     self._deck = Deck.fromjson(utils.CheckPath("decks", deck + ".json"))
 
-    # The players of the game
+    # The players of the game.
     self._players = collections.OrderedDict()
     for i, name in enumerate(players):
       self._players[name] = Player(name)
     self._num_players = len(self.players)
+    self._dealer = None
+
+  @property
+  def dealer(self):
+    return self._dealer
 
   @property
   def deck(self):

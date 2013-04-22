@@ -13,12 +13,12 @@ from game import Game
 class TrickTakingGame(Game):
   """A trick-taking game."""
 
-  def __init__(self, deck, players):
+  def __init__(self, players, deck):
     """Constructor.
 
     Args:
-      deck: The name of the deck for this game.
       players: A sequence containing player names.
+      deck: The name of the deck for this game.
     """
     # Invoke superclass constructor.
     super(TrickTakingGame, self).__init__(deck, players)
