@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
 #
 # Copyright 2013 Cards with Friends LLC. All Rights Reserved.
 
@@ -10,12 +10,10 @@ from deck import Deck
 
 
 if __name__ == "__main__":
-  d = Deck.fromjson("decks/test.json")
-  assert(d.name == "test")
-  assert(d.long_name == "Small Test Deck")
-  d.get_back_image().show()
-  initial_cards_list = d._cards_list[:]
-  print [i.name for i in initial_cards_list]
-  d.shuffle()
-  new_cards_list = d._cards_list[:]
-  print [i.name for i in new_cards_list]
+  d = Deck.fromjson("decks/standard.json")
+  assert(d.name == "standard")
+  assert(d.long_name == "Standard 52-Card Deck")
+  # d.GetBackImage().show()
+  cards = list(d)
+  assert(len(cards) == 52)
+  print cards

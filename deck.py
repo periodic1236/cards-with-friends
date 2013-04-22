@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
 #
 # Copyright 2013 Cards with Friends LLC. All Rights Reserved.
 
@@ -10,30 +10,32 @@ import collections
 import json
 import os
 import random
-
 from PIL import Image
-
 from card import Card
+from pylib import utils
+
+_CARD_IMAGE_BASE = "card_images"
 
 
-class Deck(object):
+class Deck(collections.Iterator):
   """A deck of playing cards."""
 
-  def __init__(self, name, long_name, labels, cards, back_image_loc):
+  def __init__(self, name, long_name, back_image_loc):
     """Create a deck from a list of cards.
 
     Args:
-      labels: A list of properties all the cards have.
-      cards: A list of elements (name, long_name, image_loc, values).
+      name: A unique identifier for the deck.
+      long_name: The long name of the deck.
+      back_image_loc: The image location for the back of each card.
     """
     self._name = name
     self._long_name = long_name
-    self._num_cards = len(cards)
-    self._back_image_loc = back_image_loc
-    self._cards_list = collections.deque([None] * self._num_cards)
-    for i in xrange(self._num_cards):
-      card = cards[i]
-      self._cards_list[i] = Card(card[0], card[1], card[2], labels, card[3])
+    self._back_image_loc = utils.CheckPath(_CARD_IMAGE_BASE, back_image_loc)
+    self._cards = {}
+    self._deck = []
+
+  def __len__(self):
+    return len(self._deck)
 
   @classmethod
   def fromjson(cls, filename):
@@ -41,42 +43,53 @@ class Deck(object):
 
     The file format is explained elsewhere.
     """
-    # TODO(brazon): add reference to documentation
+    # TODO(brazon): Add reference to documentation
+    deck_keys = ("name", "long_name", "back_image_loc", "labels", "cards")
+    card_keys = ("name", "long_name", "image_loc")
     with open(filename, "r") as f:
-      json_deck = json.load(f)
-    for field in ("name", "long_name", "labels", "cards", "back_image_loc"):
-      if field not in json_deck:
-        raise KeyError("Missing JSON key: %s" % field)
-    name = json_deck["name"]
-    long_name = json_deck["long_name"]
-    labels = [i["name"] for i in json_deck["labels"]]
-    cards = [(c["name"], c["long_name"], c["image_loc"], [c[j] for j in labels])
-             for c in json_deck["cards"]]
-    back_image_loc = json_deck["back_image_loc"]
-    return cls(name, long_name, labels, cards, back_image_loc)
+      d = json.load(f, object_pairs_hook=utils.AttributeDict)
+    utils.CheckJSON(d, "deck", deck_keys)
+    deck = cls(d.name, d.long_name, d.back_image_loc)
+    for c in d.cards:
+      utils.CheckJSON(c, "card", card_keys)
+      props = dict((l.name, utils.ConvertLabel(c[l.name], l.type)) for l in d.labels)
+      deck._AddCard(c.name, c.long_name, c.image_loc, **props)
+    deck.Shuffle()
+    return deck
 
-  def get_back_image(self):
-    return Image.open(self.back_image_loc)
+  def next(self):
+    if not self:
+      raise StopIteration
+    return self._deck.pop()
 
-  def get_next_card(self, num_cards=1):
+  def _AddCard(self, name, long_name, image_loc, **props):
+    if name in self._cards:
+      raise KeyError("Card already exists: %s" % name)
+    self._cards[name] = Card(name, long_name, image_loc, **props)
+
+  def Draw(self, num_cards=1):
     """Remove and return the top num_card cards from the deck (default 1).
 
     If num_cards > 1, then a list is returned. This also updates num_cards.
     """
     if num_cards < 1:
       raise ValueError("num_cards must be positive, got: %d" % num_cards)
-    if self.num_cards < num_cards:
+    if len(self) < num_cards:
       raise IndexError("Tried to draw %d cards, but deck only has %d." % 
                        (num_cards, self.num_cards))
-    self._num_cards -= num_cards
     if num_cards > 1:
-      return [self._cards_list.popleft() for _ in xrange(num_cards)]
-    return self._cards_list.popleft()
+      return [next(self) for _ in xrange(num_cards)]
+    return next(self)
 
-  def shuffle(self):
-    random.shuffle(self._cards_list)
+  def GetBackImage(self):
+    return Image.open(self.back_image_loc)
 
-  def write_to_file(self, filename, indent=2):
+  def Shuffle(self, reset=True):
+    if reset:
+      self._deck = self._cards.values()
+    random.shuffle(self._deck)
+
+  def WriteToFile(self, filename, indent=2):
     if os.path.exists(filename):
       raise IOError("You don't have permission to overwrite files.")
     with open(filename, "w+") as f:
@@ -85,7 +98,7 @@ class Deck(object):
 
   @property
   def back_image_loc(self):
-    return os.path.join("card_images", os.path.basename(self._back_image_loc))
+    return self._back_image_loc
 
   @property
   def long_name(self):
@@ -94,7 +107,3 @@ class Deck(object):
   @property
   def name(self):
     return self._name
-
-  @property
-  def num_cards(self):
-    return self._num_cards

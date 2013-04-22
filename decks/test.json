@@ -15,7 +15,7 @@
     ],
     "cards": [
         {
-            "name": "As",
+            "name": "AS",
             "type": "card",
             "long_name": "Ace of Spades",
             "suit": "spades",
@@ -23,7 +23,7 @@
             "image_loc": "std_A_S.png"
         },
         {
-            "name": "Ac",
+            "name": "AC",
             "type": "card",
             "long_name": "Ace of Clubs",
             "suit": "clubs",
@@ -31,7 +31,7 @@
             "image_loc": "std_A_C.png"
         },
         {
-            "name": "Ad",
+            "name": "AD",
             "type": "card",
             "long_name": "Ace of Diamonds",
             "suit": "diamonds",
@@ -39,7 +39,7 @@
             "image_loc": "std_A_D.png"
         },
         {
-            "name": "Ah",
+            "name": "AH",
             "type": "card",
             "long_name": "Ace of Hearts",
             "suit": "hearts",
@@ -47,7 +47,7 @@
             "image_loc": "std_A_H.png"
         },
         {
-            "name": "2s",
+            "name": "2S",
             "type": "card",
             "long_name": "Two of Spades",
             "suit": "spades",
@@ -55,7 +55,7 @@
             "image_loc": "std_2_S.png"
         },
         {
-            "name": "2c",
+            "name": "2C",
             "type": "card",
             "long_name": "Two of Clubs",
             "suit": "clubs",
@@ -63,7 +63,7 @@
             "image_loc": "std_2_C.png"
         },
         {
-            "name": "2d",
+            "name": "2D",
             "type": "card",
             "long_name": "Two of Diamonds",
             "suit": "diamonds",
@@ -71,7 +71,7 @@
             "image_loc": "std_2_D.png"
         },
         {
-            "name": "2h",
+            "name": "2H",
             "type": "card",
             "long_name": "Two of Hearts",
             "suit": "hearts",
