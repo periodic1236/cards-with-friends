@@ -57,9 +57,10 @@ class Game(object):
     return self.players[index % self._num_players]
 
   def GetPlayerByName(self, name):
-    for player in self.players:
-      if player.name == name:
-        return player
+    try:
+      return next(player for player in self.players if player.name == name)
+    except StopIteration:
+      raise ValueError("Player '{}' not found".format(name))
 
   def GetPlayerIndex(self, player):
     return self.players.index(player)

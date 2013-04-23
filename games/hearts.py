@@ -6,7 +6,7 @@
 
 __author__ = "ding@caltech.edu (David Ding)"
 
-from ..trick_taking_game import TrickTakingGame
+from trick_taking_game import TrickTakingGame
 
 
 class Hearts(TrickTakingGame):
@@ -24,21 +24,21 @@ class Hearts(TrickTakingGame):
       self._NewRound()
       # Pass cards left, right, across, or not at all based on the round number.
       self._Trade()
-      # Identify first player of the round
-      self.lead = self._GetFirstPlayer()
-      # Play 13 tricks
+      # Identify first player of the round.
+      self.lead = self._FindFirstPlayer()
+      # Play 13 tricks.
       for _ in xrange(13):
         self.trick_num += 1
         self.cards_played = []
-        # Have each player play a valid card for the trick
+        # Have each player play a valid card for the trick.
         for i in xrange(self.num_players):
           play = self._GetValidPlay(self.GetPlayerByIndex(self.lead + i))
           self.cards_played.append(play)
-        # Determine who got the trick, and give them the cards
+        # Determine who got the trick, and give them the cards.
         self.lead += self._GetTrickWinner()
         self.lead %= self.num_players
         self.GetPlayerByIndex(self.lead).Take(*self.cards_played)
-      # Calculate and add scores
+      # Calculate and add scores.
       self._ScoreRound()
     return sorted(self._players, key=lambda x: x.score)
 
@@ -51,22 +51,16 @@ class Hearts(TrickTakingGame):
     self._state.clear()
     self._state.round_num = 0
 
-  def _GetFirstPlayer(self):
+  def _FindFirstPlayer(self):
     # Find first player (has two of clubs).
-    for index, player in enumerate(self.players):
-      if "2C" in player.hand:
-        return index
+    return next(i for (i, p) in enumerate(self.players) if any(c.name == "2C" for c in p.hand))
 
-  def _GetTrickWinner(self):
-    lead_suit = self.cards_played[0].suit
-    return max((c.number, i) for (i, c) in enumerate(self.cards_played) if c.suit == lead_suit))[-1]
-
-  def _GetValidPlay(self, player):
+  def _GetPlayAndCheck(self, player):
     card = None
-    # If the play is the first play of the trick.
+    # If the play leads the trick.
     if not self.cards_played:
       while True:
-        card = player.GetPlay()
+        card = player.MaybeGetPlay()
         # If hearts is broken, the play is fine regardless.
         if self.hearts_broken:
           break
@@ -88,8 +82,8 @@ class Hearts(TrickTakingGame):
         break
     else:
       while True:
-        card = player.GetPlay()
-        # Must follow suit if possible. # If the suit matches, the play is valid.
+        card = player.MaybeGetPlay()
+        # Must follow suit if possible. If the suit matches, the play is valid.
         if card.suit == self.cards_played[0].suit:
           break
         # If another card matches suit, cannot play this card.
@@ -107,12 +101,46 @@ class Hearts(TrickTakingGame):
           if all(c.suit == "hearts" for c in player.hand):
             self.hearts_broken = True
             break
-          self.WarnPlayer(player, card, "Cannot play a heart on the first trick")
+          self.WarnPlayer(player, card, "Cannot play hearts on the first trick")
           self.AddToHand(card)
           continue
         if card.suit == "hearts" and not self.hearts_broken:
           self.hearts_broken = True
         break
+    return card
+
+  def _GetTrickWinner(self):
+    lead_suit = self.cards_played[0].suit
+    return max((c.number, i) for (i, c) in enumerate(self.cards_played) if c.suit == lead_suit)[-1]
+
+  def _GetValidMoves(self, player):
+    # If the play leads the trick.
+    if not self.cards_played:
+      # If hearts is broken, any play from the hand is valid.
+      if self.hearts_broken:
+        return (None, list(player.hand))
+      # Otherwise, cannot play queen of spades, nor hearts if hand has other suits.
+      other = any(c.suit != "hearts" for c in player.hand)
+      return ("Hearts not broken",
+              [c for c in player.hand if c.name != "QS" and c.suit != "hearts" if other else True])
+    # Otherwise, must follow suit if possible.
+    lead_suit = self.cards_played[0].suit
+    follow = [c for c in player.hand if c.suit == lead_suit]
+    if follow:
+      return ("Must follow suit", follow)
+    # If can't follow suit and this is the first trick, cannot play queen of spades, nor hearts if
+    # hand has other suits.
+    if not self.trick_num:
+      other = any(c.suit != "hearts" for c in player.hand)
+      return ("Cannot play queen of spades or hearts on the first trick (unless all hearts)",
+              [c for c in player.hand if c.name != "QS" and c.suit != "hearts" if other else True])
+    # At this point, any play from the hand is valid.
+    return (None, list(player.hand))
+
+  def _GetValidPlay(self, player):
+    card = player.GetPlay(*self._GetValidMoves(player))
+    if card.suit == "hearts" and not self.hearts_broken:
+      self.hearts_broken = True
     return card
 
   def _IsTerminal(self):
@@ -132,7 +160,7 @@ class Hearts(TrickTakingGame):
     self.DealCards(0, [(len(self.deck) // self.num_players, [1] * self.num_players)])
 
   def _ScoreRound():
-    # Update scores, taking shooting the moon into account
+    # Update scores, taking shooting the moon into account.
     scores = [0] * self.num_players
     for i, p in enumerate(self.players):
       scores[i] += sum(13 if c.name == "QS" else 1 if c.suit == "hearts" else 0 for c in p.taken)
