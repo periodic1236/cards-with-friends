@@ -8,6 +8,7 @@ __author__ = "mqian@caltech.edu (Mike Qian)"
 
 import collections
 import os
+import re
 
 _LABEL_TYPES = {
     "array": list,
@@ -16,7 +17,11 @@ _LABEL_TYPES = {
     "integer": int,
     "string": unicode,
 }
+_NON_ALPHANUM_RE = re.compile(r"[^A-Za-z0-9]+")
 _ROOT_DIR = os.getcwd()
+_WHITESPACE_RE = re.compile(r"\s", flags=re.UNICODE)
+CARD_IMG_BASE = "card_images"
+DECK_BASE = "decks"
 
 
 class AttributeDict(dict):
@@ -30,18 +35,19 @@ def CheckJSON(doc, type, fields):
   if "type" not in doc:
     raise KeyError("Invalid JSON config, missing key 'type'")
   if doc.type != type:
-    raise ValueError("Invalid {}, got type '{}'".format(type, doc.type))
+    raise ValueError("Invalid JSON {}, got type '{}'".format(type, doc.type))
   for field in fields:
     if field not in doc:
       raise KeyError("Missing JSON {} key '{}'".format(type, field))
 
 
-def CheckPath(basedir, path):
+def CheckPath(path, basedir=None):
   """Make sure the given path exists and does not break out of the root base directory."""
-  path = os.path.join(basedir, path)
+  if basedir is not None:
+    path = os.path.join(basedir, path)
   if not os.path.abspath(path).startswith(_ROOT_DIR) or not os.path.exists(path):
     # TODO(mqian): Raise a more meaningful error.
-    raise ValueError("Invalid path '{}'".format(path))
+    raise IOError("Invalid path '{}'".format(path))
   return os.path.normpath(path)
 
 
@@ -50,3 +56,9 @@ def ConvertLabel(label, type):
     return _LABEL_TYPES[type](label)
   except KeyError:
     return label
+
+
+def Sanitize(string, repl="-"):
+  return string
+  # return _NON_ALPHANUM_RE.sub(repl, string)
+  # return _WHITESPACE_RE.sub(repl, string)

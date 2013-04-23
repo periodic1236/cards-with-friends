@@ -28,10 +28,10 @@ class Deck(collections.Iterator):
       long_name: The long name of the deck.
       back_image_loc: The image location for the back of each card.
     """
-    self._name = name
+    self._name = utils.Sanitize(name)
     self._long_name = long_name
-    self._back_image_loc = utils.CheckPath(_CARD_IMAGE_BASE, back_image_loc)
-    self._cards = collections.Counter()
+    self._back_image_loc = utils.CheckPath(back_image_loc, utils.CARD_IMG_BASE)
+    self._cards = set()
     self._deck = []
 
   def __len__(self):
@@ -40,16 +40,22 @@ class Deck(collections.Iterator):
   def __nonzero__(self):
     return bool(self._deck)
 
+  def __repr__(self):
+    return "{}({}, cards={})".format(self.__class__.__name__,
+                                     self._name,
+                                     list(reversed(self._deck)))
+
   @classmethod
-  def fromjson(cls, filename):
+  def fromjson(cls, filepath):
     """Create a deck from a JSON file.
 
     The file format is explained elsewhere.
     """
     # TODO(brazon): Add reference to documentation
+    filepath = utils.CheckPath(filepath)
     deck_keys = ("name", "long_name", "back_image_loc", "labels", "cards")
     card_keys = ("name", "long_name", "image_loc")
-    with open(filename, "r") as f:
+    with open(filepath, "r") as f:
       d = json.load(f, object_pairs_hook=utils.AttributeDict)
     utils.CheckJSON(d, "deck", deck_keys)
     deck = cls(d.name, d.long_name, d.back_image_loc)
@@ -67,18 +73,17 @@ class Deck(collections.Iterator):
 
   def _AddCard(self, name, long_name, image_loc, **props):
     card = Card(name, long_name, image_loc, **props)
-    self._cards[card] += 1
+    self._cards.add(card)
 
   def Draw(self, num_cards=1):
     """Remove and return the top num_card cards from the deck (default 1).
 
-    If num_cards > 1, then a list is returned. This also updates num_cards.
+    If num_cards > 1, then a list is returned.
     """
     if num_cards < 1:
-      raise ValueError("num_cards must be positive, got: %d" % num_cards)
+      raise ValueError("num_cards must be positive, got %d" % num_cards)
     if len(self) < num_cards:
-      raise IndexError("Tried to draw %d cards, but deck only has %d." % 
-                       (num_cards, self.num_cards))
+      raise IndexError("Tried to draw %d cards, but deck has %d." % (num_cards, self.num_cards))
     if num_cards > 1:
       return [next(self) for _ in xrange(num_cards)]
     return next(self)
@@ -88,13 +93,15 @@ class Deck(collections.Iterator):
 
   def Shuffle(self, reset=True):
     if reset:
-      self._deck = list(self._cards.elements())
+      self._deck = list(self._cards)
     random.shuffle(self._deck)
 
-  def WriteToFile(self, filename, indent=2):
-    if os.path.exists(filename):
-      raise IOError("You don't have permission to overwrite files.")
-    with open(filename, "w+") as f:
+  def WriteToFile(self, filepath, indent=2):
+    try:
+      filepath = utils.CheckPath(filepath)
+    except IOError:
+      raise ValueError("Unable to write to the given file.")
+    with open(filepath, "w+") as f:
       # TODO(brazon): Figure out how to recreate json
       raise NotImplementedError("TODO(brazon)")
 
