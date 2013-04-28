@@ -31,14 +31,14 @@ class AttributeDict(dict):
     self.__dict__ = self
 
 
-def CheckJSON(doc, type, fields):
+def CheckJSON(doc, type_, fields):
   if "type" not in doc:
     raise KeyError("Invalid JSON config, missing key 'type'")
-  if doc.type != type:
-    raise ValueError("Invalid JSON {}, got type '{}'".format(type, doc.type))
+  if doc.type != type_:
+    raise ValueError("Invalid JSON {}, got type '{}'".format(type_, doc.type))
   for field in fields:
     if field not in doc:
-      raise KeyError("Missing JSON {} key '{}'".format(type, field))
+      raise KeyError("Missing JSON {} key '{}'".format(type_, field))
 
 
 def CheckPath(path, basedir=None):
@@ -51,9 +51,9 @@ def CheckPath(path, basedir=None):
   return os.path.normpath(path)
 
 
-def ConvertLabel(label, type):
+def ConvertLabel(label, type_):
   try:
-    return _LABEL_TYPES[type](label)
+    return _LABEL_TYPES[type_](label)
   except KeyError:
     return label
 

@@ -7,14 +7,15 @@
 __author__ = "mqian@caltech.edu (Mike Qian)"
 
 import collections
+import threading
 from game import Game
 
 
 class TrickTakingGame(Game):
   """A trick-taking game."""
 
-  def __init__(self, players, deck):
-    super(TrickTakingGame, self).__init__(players, deck)
+  def __init__(self, players, deck, manager=None):
+    super(TrickTakingGame, self).__init__(players, deck, manager)
 
   def PlayGame(self, *args, **kwargs):
     raise NotImplementedError("This class should be implemented by users.")
@@ -56,6 +57,35 @@ class TrickTakingGame(Game):
 
   def _NewRound(self, *args, **kwargs):
     raise NotImplementedError("This class should be implemented by users.")
+
+  def _PassCards(self, patterns):
+    """Pass cards between players, perhaps simultaneously.
+
+    Args:
+      patterns: A list of tuples of the form (from, to, # cards).
+    Usage:
+      self.PassCards(...)
+    """
+    accum = collections.defaultdict(set)
+
+    def get_callback(player):
+      def callback(cards, player=player):
+        with self._condition:
+          accum[player] |= set(cards)
+          self._condition.notify()
+      return callback
+
+    def process(from_, to, num_cards, valid=None):
+      valid = list(from_.hand) if valid is None else list(valid)
+      self._manager.Add(from_.GetPlay, None, valid, num_cards, get_callback(to))
+
+    for pattern in patterns:
+      process(*pattern)
+    with self._condition:
+      while len(accum) < len(patterns):
+        self._condition.wait()
+      for to, cards in accum.items():
+        to.AddToHand(*cards)
 
 
 if __name__ == "__main__":

@@ -38,21 +38,27 @@ class Player(object):
     self.taken.clear()
 
   def GetBid(self):
-    # TODO(brazon): Interact with front-end to get bid
+    # TODO(brazon): Interact with front-end to get bid.
     bid = None
     return bid
 
-  def GetPlay(self, error_msg, valid_plays, num_cards=1):
+  def GetPlay(self, error_msg, valid_plays, num_cards=1, callback=None):
     # TODO(brazon): Interact with front-end to get card.
     if num_cards < 1:
       raise ValueError("num_cards must be positive, got %d" % num_cards)
     cards = []
     self.hand.Remove(*cards)
-    return cards if num_cards > 1 else cards[0]
+    result = cards if num_cards > 1 else cards[0]
+    if callback is None:
+      return result
+    callback(result)
 
-  def MaybeGetPlay(self, num_cards=1):
+  def MaybeGetPlay(self, num_cards=1, callback=None):
     # TODO(brazon)
-    return None
+    result = None
+    if callback is None:
+      return result
+    callback(result)
 
   def Take(self, *cards):
     if not all(isinstance(item, Card) for item in cards):

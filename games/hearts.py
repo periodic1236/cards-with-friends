@@ -12,8 +12,8 @@ from trick_taking_game import TrickTakingGame
 class Hearts(TrickTakingGame):
   """The Hearts card game."""
 
-  def __init__(self, players, deck=None):
-    super(Hearts, self).__init__(players, deck or "standard")
+  def __init__(self, players, deck=None, manager=None):
+    super(Hearts, self).__init__(players, deck or "standard", manager)
     self.ResetGame()
 
   def PlayGame(self):
@@ -122,7 +122,7 @@ class Hearts(TrickTakingGame):
       # Otherwise, cannot play queen of spades, nor hearts if hand has other suits.
       other = any(c.suit != "hearts" for c in player.hand)
       return ("Hearts not broken",
-              [c for c in player.hand if c.name != "QS" and c.suit != "hearts" if other else True])
+              [c for c in player.hand if c.name != "QS" and (c.suit != "hearts" if other else True)])
     # Otherwise, must follow suit if possible.
     lead_suit = self.cards_played[0].suit
     follow = [c for c in player.hand if c.suit == lead_suit]
@@ -133,7 +133,7 @@ class Hearts(TrickTakingGame):
     if not self.trick_num:
       other = any(c.suit != "hearts" for c in player.hand)
       return ("Cannot play queen of spades or hearts on the first trick (unless all hearts)",
-              [c for c in player.hand if c.name != "QS" and c.suit != "hearts" if other else True])
+              [c for c in player.hand if c.name != "QS" and (c.suit != "hearts" if other else True)])
     # At this point, any play from the hand is valid.
     return (None, list(player.hand))
 
@@ -148,7 +148,7 @@ class Hearts(TrickTakingGame):
     return max([player.score for player in self.players]) >= 100
 
   def _NewRound(self):
-    self.round_num += 1
+    self._state.round_num += 1
     self._state.update({
         "cards_played": [],
         "hearts_broken": False,
@@ -159,11 +159,11 @@ class Hearts(TrickTakingGame):
     self.deck.Shuffle()
     self.DealCards(0, [(len(self.deck) // self.num_players, [1] * self.num_players)])
 
-  def _ScoreRound():
+  def _ScoreRound(self):
     # Update scores, taking shooting the moon into account.
     scores = [0] * self.num_players
     for i, p in enumerate(self.players):
-      scores[i] += sum(13 if c.name == "QS" else 1 if c.suit == "hearts" else 0 for c in p.taken)
+      scores[i] = sum(13 if c.name == "QS" else 1 if c.suit == "hearts" else 0 for c in p.taken)
 
     if 26 in scores:
       for p, score in zip(self.players, scores):
@@ -175,21 +175,22 @@ class Hearts(TrickTakingGame):
   # TODO(ding): Discuss with mqian about adding a PassCards function to TrickTakingGame.
   def _Trade(self):
     if self.round_num % 4 == 1:
-      PassCards([self.players[0], self.players[1], 3],
-                [self.players[1], self.players[2], 3],
-                [self.players[2], self.players[3], 3],
-                [self.players[3], self.players[0], 3])
+      self._PassCards([self.players[0], self.players[1], 3],
+                      [self.players[1], self.players[2], 3],
+                      [self.players[2], self.players[3], 3],
+                      [self.players[3], self.players[0], 3])
     elif self.round_num % 4 == 2:
-      PassCards([self.players[0], self.players[3], 3],
-                [self.players[1], self.players[0], 3],
-                [self.players[2], self.players[1], 3],
-                [self.players[3], self.players[2], 3])
+      self._PassCards([self.players[0], self.players[3], 3],
+                      [self.players[1], self.players[0], 3],
+                      [self.players[2], self.players[1], 3],
+                      [self.players[3], self.players[2], 3])
     elif self.round_num % 4 == 3:
-      PassCards([self.players[0], self.players[2], 3],
-                [self.players[1], self.players[3], 3],
-                [self.players[2], self.players[0], 3],
-                [self.players[3], self.players[1], 3])
-    elif self.round_num % 4 == 0:
+      self._PassCards([self.players[0], self.players[2], 3],
+                      [self.players[1], self.players[3], 3],
+                      [self.players[2], self.players[0], 3],
+                      [self.players[3], self.players[1], 3])
+    else:
+      # No trading every fourth round.
       pass
 
 if __name__ == "__main__":

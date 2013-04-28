@@ -7,27 +7,36 @@
 __author__ = "ding@caltech.edu (David Ding)"
 
 import collections
+import threading
 import uuid
 from deck import Deck
 from player import Player
+from pylib import thread_tools
 from pylib import utils
+
+NUM_THREADS = 8
 
 
 class Game(object):
   """A card game."""
 
-  def __init__(self, players, deck):
+  def __init__(self, players, deck, manager=None):
     """Constructor.
 
     Args:
       players: A sequence of player names (expected to be unique).
       deck: The name of the deck for this game.
     """
+    # Container for state variables.
+    self._state = utils.AttributeDict()
+
+    # Thread tools.
+    self._manager = thread_tools.EventManager(NUM_THREADS) if manager is None else manager
+    self._lock = threading.RLock()
+    self._condition = threading.Condition(self._lock)
+
     # A unique ID for the game.
     self._id = uuid.uuid1()
-
-    # State variables.
-    self._state = utils.AttributeDict()
 
     # The deck of cards to use.
     try:
@@ -54,7 +63,7 @@ class Game(object):
                                                 list(self.players))
 
   def GetPlayerByIndex(self, index):
-    return self.players[index % self._num_players]
+    return self.players[index % self.num_players]
 
   def GetPlayerByName(self, name):
     try:
@@ -63,7 +72,12 @@ class Game(object):
       raise ValueError("Player '{}' not found".format(name))
 
   def GetPlayerIndex(self, player):
-    return self.players.index(player)
+    if not isinstance(player, Player) and not isinstance(player, int):
+      raise TypeError("player must be a Player or int, got type '{}'".format(type(player)))
+    try:
+      return player % self.num_players if isinstance(player, int) else self.players.index(player)
+    except ValueError:
+      raise ValueError("Player '{}' not found in this game".format(player.name))
 
   def ResetPlayers(self, score=None):
     """Reset the state of every player."""
