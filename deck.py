@@ -76,17 +76,12 @@ class Deck(collections.Iterator):
     self._cards.add(card)
 
   def Draw(self, num_cards=1):
-    """Remove and return the top num_card cards from the deck (default 1).
-
-    If num_cards > 1, then a list is returned.
-    """
+    """Remove and return the top num_card cards (default 1) from the deck as a list."""
     if num_cards < 1:
       raise ValueError("num_cards must be positive, got %d" % num_cards)
     if len(self) < num_cards:
       raise IndexError("Tried to draw %d cards, but deck has %d." % (num_cards, self.num_cards))
-    if num_cards > 1:
-      return [next(self) for _ in xrange(num_cards)]
-    return next(self)
+    return [next(self) for _ in xrange(num_cards)]
 
   def GetBackImage(self):
     return Image.open(self.back_image_loc)

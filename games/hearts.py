@@ -157,7 +157,7 @@ class Hearts(TrickTakingGame):
     })
     self.ResetPlayers()
     self.deck.Shuffle()
-    self.DealCards(0, [(len(self.deck) // self.num_players, [1] * self.num_players)])
+    self._DealCards(0, (len(self.deck) // self.num_players, [1] * self.num_players))
 
   def _ScoreRound(self):
     # Update scores, taking shooting the moon into account.
@@ -175,20 +175,20 @@ class Hearts(TrickTakingGame):
   # TODO(ding): Discuss with mqian about adding a PassCards function to TrickTakingGame.
   def _Trade(self):
     if self.round_num % 4 == 1:
-      self._PassCards([self.players[0], self.players[1], 3],
-                      [self.players[1], self.players[2], 3],
-                      [self.players[2], self.players[3], 3],
-                      [self.players[3], self.players[0], 3])
+      self._PassCards((self.players[0], self.players[1], 3),
+                      (self.players[1], self.players[2], 3),
+                      (self.players[2], self.players[3], 3),
+                      (self.players[3], self.players[0], 3))
     elif self.round_num % 4 == 2:
-      self._PassCards([self.players[0], self.players[3], 3],
-                      [self.players[1], self.players[0], 3],
-                      [self.players[2], self.players[1], 3],
-                      [self.players[3], self.players[2], 3])
+      self._PassCards((self.players[0], self.players[3], 3),
+                      (self.players[1], self.players[0], 3),
+                      (self.players[2], self.players[1], 3),
+                      (self.players[3], self.players[2], 3))
     elif self.round_num % 4 == 3:
-      self._PassCards([self.players[0], self.players[2], 3],
-                      [self.players[1], self.players[3], 3],
-                      [self.players[2], self.players[0], 3],
-                      [self.players[3], self.players[1], 3])
+      self._PassCards((self.players[0], self.players[2], 3),
+                      (self.players[1], self.players[3], 3),
+                      (self.players[2], self.players[0], 3),
+                      (self.players[3], self.players[1], 3))
     else:
       # No trading every fourth round.
       pass

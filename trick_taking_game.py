@@ -7,8 +7,8 @@
 __author__ = "mqian@caltech.edu (Mike Qian)"
 
 import collections
-import threading
 from game import Game
+from player import Player
 
 
 class TrickTakingGame(Game):
@@ -23,14 +23,14 @@ class TrickTakingGame(Game):
   def ResetGame(self, *args, **kwargs):
     raise NotImplementedError("This class should be implemented by users.")
 
-  def _DealCards(self, first, patterns):
+  def _DealCards(self, first, *patterns):
     """Deal cards to players.
 
     Args:
       first: The first player to deal to (or his index).
-      patterns: A list of tuples of the form (# phases, deal pattern).
+      patterns: Tuples of the form (# phases, deal pattern).
     Usage:
-      self.DealCards(0, [(13, [1, 1, 1, 1])])
+      self.DealCards(0, (13, [1, 1, 1, 1]))
     """
     if not isinstance(first, Player) and not isinstance(first, int):
       raise TypeError("first must be a Player or int, got type '{}'".format(type(first)))
@@ -58,11 +58,11 @@ class TrickTakingGame(Game):
   def _NewRound(self, *args, **kwargs):
     raise NotImplementedError("This class should be implemented by users.")
 
-  def _PassCards(self, patterns):
+  def _PassCards(self, *patterns):
     """Pass cards between players, perhaps simultaneously.
 
     Args:
-      patterns: A list of tuples of the form (from, to, # cards).
+      patterns: Tuples of the form (from, to, # cards[, list of valid cards]).
     Usage:
       self.PassCards(...)
     """
