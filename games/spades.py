@@ -6,12 +6,14 @@
 
 __author__ = "ding@caltech.edu (David Ding)"
 
-from ..trick_taking_game import TrickTakingGame
+from trick_taking_game import TrickTakingGame
 
 class Spades(TrickTakingGame):
   """The Spades card game."""
 
   def __init__(self, players, deck=None, manager=None):
+    if len(players) != 4:
+      raise ValueError("Hearts is a 4-player game, got {} players".format(len(players)))
     super(Hearts, self).__init__(players, deck or "standard", manager)
     self.ResetGame()
 
@@ -70,9 +72,9 @@ class Spades(TrickTakingGame):
     follow = [c for c in player.hand if c.suit == lead_suit]
     if follow:
       return ("Must follow suit", follow)
-    # If can't follow suit and this is the first trick, cannot spades if
+    # If can't follow suit and this is the first trick, cannot play spades if
     # hand has other suits.
-    if not self.trick_num:
+    if self.trick_num == 1:
       other = any(c.suit != "spades" for c in player.hand)
       return ("Cannot play spades on the first trick (unless all spades)",
               [c for c in player.hand if (c.suit != "spades" if other else True)])
@@ -85,13 +87,13 @@ class Spades(TrickTakingGame):
       self.spades_broken = True
     return card
 
-  def _GetValidBids(self, player):
+  def _GetValidBidAmounts(self, player):
     """Return a list of valid bids for the given player based on the current state."""
     return ("Bid must be between 1 and 13, inclusive", range(1, 14))
 
   def _GetValidBid(self, player):
     """Get a valid bid from the given player."""
-    return player.GetBid(*self._GetValidBids(player))
+    return player.GetBid(*self._GetValidBidAmounts(player))
 
   def _IsTerminal(self):
     return max(self.team_scores) >= 500

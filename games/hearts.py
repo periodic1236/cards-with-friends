@@ -134,7 +134,7 @@ class Hearts(TrickTakingGame):
       return ("Must follow suit", follow)
     # If can't follow suit and this is the first trick, cannot play queen of spades, nor hearts if
     # hand has other suits.
-    if not self.trick_num:
+    if self.trick_num == 1:
       other = any(c.suit != "hearts" for c in player.hand)
       return ("Cannot play queen of spades or hearts on the first trick (unless all hearts)",
               [c for c in player.hand if c.name != "QS" and (c.suit != "hearts" if other else True)])
