@@ -37,10 +37,15 @@ class Player(object):
   def ClearTaken(self):
     self.taken.clear()
 
-  def GetBid(self):
+  def GetBid(self, error_msg, valid_bids, num_bids=1, callback=None):
     # TODO(brazon): Interact with front-end to get bid.
-    bid = None
-    return bid
+    if num_cards < 1:
+      raise ValueError("num_bids must be positive, got %d" % num_bids)
+    bids = []
+    result = bids if num_bids > 1 else bids[0]
+    if callback is None:
+      return result
+    callback(result)
 
   def GetPlay(self, error_msg, valid_plays, num_cards=1, callback=None):
     # TODO(brazon): Interact with front-end to get card.

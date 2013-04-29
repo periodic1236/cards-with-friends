@@ -1,0 +1,26 @@
+class Game
+    functions
+        GetPlayerByIndex(index): return a player given their index into the order (mod the number of players)
+        GetPlayerByName(name): return a player given their name
+        GetPlayerIndex(player): return a player's index into the order
+        ResetPlayers([score=None]): clear a player's hand, as well as the cards they have taken. Optionally, reset their scores to a specified value.
+
+class TrickTakingGame (subclass of Game)
+    functions
+        _DealCards(first, *patterns): deal cards to players given the first player to deal to, as well as the pattern of dealing in the form (# phases, deal pattern).
+        _PassCards(*patterns): pass cards simultaneously between players given tuples of the form (from, to, # cards[, list of valid cards])
+
+class Player
+    functions
+        AddToHand(*cards): add cards to hand.
+        ClearHand(): clear hand.
+        ClearTaken(): clear cards taken.
+        GetBid(error_msg, valid_bids[, num_bids=1, callback = None]): get a bid from a player given an error message, a list of valid bids, and optionally, the number of bids.
+        GetBid(error_msg, valid_plays[, num_cards=1, callback = None]): get a bid from a player given an error message, a list of valid plays, and optionally, the number of cards in the play.
+        Take(*cards): add cards to cards taken.
+
+class Hand
+    functions
+        Add(*cards): add cards to hand.
+        Clear(): clear hand.
+        Remove(*cards: remove specified cards from hand.
