@@ -13,6 +13,8 @@ class Hearts(TrickTakingGame):
   """The Hearts card game."""
 
   def __init__(self, players, deck=None, manager=None):
+    if len(players) != 4:
+      raise ValueError("Hearts is a 4-player game, got {} players".format(len(players)))
     super(Hearts, self).__init__(players, deck or "standard", manager)
     self.ResetGame()
 
@@ -52,7 +54,7 @@ class Hearts(TrickTakingGame):
     self._state.round_num = 0
 
   def _FindFirstPlayer(self):
-    # Find first player (has two of clubs).
+    """Find the first player of a round. The first player has the two of clubs."""
     return next(i for (i, p) in enumerate(self.players) if any(c.name == "2C" for c in p.hand))
 
   def _GetPlayAndCheck(self, player):
@@ -67,7 +69,7 @@ class Hearts(TrickTakingGame):
         # Cannot play queen of spades if hearts not broken.
         if card.name == "QS":
           self.WarnPlayer(player, card, "Hearts not broken")
-          self.AddToHand(card)
+          player.AddToHand(card)
           continue
         # Check if can play hearts.
         if card.suit == "hearts":
@@ -76,7 +78,7 @@ class Hearts(TrickTakingGame):
             self.hearts_broken = True
             break
           self.WarnPlayer(player, card, "Hearts not broken")
-          self.AddToHand(card)
+          player.AddToHand(card)
           continue
         # If card is not the queen of spades or a heart, the play is fine.
         break
@@ -89,12 +91,12 @@ class Hearts(TrickTakingGame):
         # If another card matches suit, cannot play this card.
         if any(c.suit == self.cards_played[0].suit for c in player.hand):
           self.WarnPlayer(player, card, "Must follow suit")
-          self.AddToHand(card)
+          player.AddToHand(card)
           continue
         # Cannot play queen of spades the first trick.
         if card.name == "QS" and not self.trick_num:
           self.WarnPlayer(player, card, "Cannot play queen of spades on the first trick")
-          self.AddToHand(card)
+          player.AddToHand(card)
           continue
         # Cannot play hearts the first trick unless hand is all hearts.
         if card.suit == "hearts" and not self.trick_num:
@@ -102,7 +104,7 @@ class Hearts(TrickTakingGame):
             self.hearts_broken = True
             break
           self.WarnPlayer(player, card, "Cannot play hearts on the first trick")
-          self.AddToHand(card)
+          player.AddToHand(card)
           continue
         if card.suit == "hearts" and not self.hearts_broken:
           self.hearts_broken = True
@@ -110,10 +112,12 @@ class Hearts(TrickTakingGame):
     return card
 
   def _GetTrickWinner(self):
+    """Determine who won the most recent trick."""
     lead_suit = self.cards_played[0].suit
     return max((c.number, i) for (i, c) in enumerate(self.cards_played) if c.suit == lead_suit)[-1]
 
   def _GetValidMoves(self, player):
+    """Return a list of valid moves for the given player based on the current state."""
     # If the play leads the trick.
     if not self.cards_played:
       # If hearts is broken, any play from the hand is valid.
@@ -138,17 +142,19 @@ class Hearts(TrickTakingGame):
     return (None, list(player.hand))
 
   def _GetValidPlay(self, player):
+    """Get a valid move from the given player."""
     card = player.GetPlay(*self._GetValidMoves(player))
     if card.suit == "hearts" and not self.hearts_broken:
       self.hearts_broken = True
     return card
 
   def _IsTerminal(self):
-    # The game ends when someone's score is >= 100.
+    """Return True iff the game has ended. The game ends when someone's score is >= 100."""
     return max([player.score for player in self.players]) >= 100
 
   def _NewRound(self):
-    self._state.round_num += 1
+    """Start a new round of the game."""
+    self.round_num += 1
     self._state.update({
         "cards_played": [],
         "hearts_broken": False,
@@ -160,7 +166,7 @@ class Hearts(TrickTakingGame):
     self._DealCards(0, (len(self.deck) // self.num_players, [1] * self.num_players))
 
   def _ScoreRound(self):
-    # Update scores, taking shooting the moon into account.
+    """Update scores, taking shooting the moon into account."""
     scores = [0] * self.num_players
     for i, p in enumerate(self.players):
       scores[i] = sum(13 if c.name == "QS" else 1 if c.suit == "hearts" else 0 for c in p.taken)
@@ -172,8 +178,8 @@ class Hearts(TrickTakingGame):
       for p, score in zip(self.players, scores):
         p.score += score
 
-  # TODO(ding): Discuss with mqian about adding a PassCards function to TrickTakingGame.
   def _Trade(self):
+    """Trade cards between players. No trading occurs every 4th round."""
     if self.round_num % 4 == 1:
       self._PassCards((self.players[0], self.players[1], 3),
                       (self.players[1], self.players[2], 3),
@@ -189,9 +195,7 @@ class Hearts(TrickTakingGame):
                       (self.players[1], self.players[3], 3),
                       (self.players[2], self.players[0], 3),
                       (self.players[3], self.players[1], 3))
-    else:
-      # No trading every fourth round.
-      pass
+
 
 if __name__ == "__main__":
   pass

@@ -62,6 +62,12 @@ class Game(object):
                                                 self.deck.name,
                                                 list(self.players))
 
+  def __setattr__(self, name, value):
+    if name in self._state:
+      self._state[name] = value
+    else:
+      object.__setattr__(self, name, value)
+
   def GetPlayerByIndex(self, index):
     return self.players[index % self.num_players]
 
@@ -69,7 +75,7 @@ class Game(object):
     try:
       return next(player for player in self.players if player.name == name)
     except StopIteration:
-      raise ValueError("Player '{}' not found".format(name))
+      raise ValueError("Player '{}' not found in this game".format(name))
 
   def GetPlayerIndex(self, player):
     if not isinstance(player, Player) and not isinstance(player, int):
