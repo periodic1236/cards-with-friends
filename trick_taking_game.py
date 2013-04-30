@@ -70,6 +70,8 @@ class TrickTakingGame(Game):
 
     def get_callback(player):
       def callback(cards, player=player):
+        if not isinstance(cards, collections.Iterable):
+          cards = [cards]
         with self._condition:
           accum[player] |= set(cards)
           self._condition.notify()

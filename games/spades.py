@@ -8,13 +8,14 @@ __author__ = "ding@caltech.edu (David Ding)"
 
 from trick_taking_game import TrickTakingGame
 
+
 class Spades(TrickTakingGame):
   """The Spades card game."""
 
   def __init__(self, players, deck=None, manager=None):
     if len(players) != 4:
-      raise ValueError("Hearts is a 4-player game, got {} players".format(len(players)))
-    super(Hearts, self).__init__(players, deck or "standard", manager)
+      raise ValueError("Spades is a 4-player game, got {} players".format(len(players)))
+    super(Spades, self).__init__(players, deck or "standard", manager)
     self.ResetGame()
 
   def PlayGame(self):
@@ -23,7 +24,7 @@ class Spades(TrickTakingGame):
     while not self._IsTerminal():
       # Reset hands, shuffle, and deal cards.
       self._NewRound()
-      # Get bids from each player
+      # Get bids from each player.
       self._Bid()
 
       # Play 13 tricks.
@@ -53,8 +54,28 @@ class Spades(TrickTakingGame):
     self._state.round_num = 0
     self._state.team_scores = [0, 0]
 
+  def _Bid(self):
+    """Get bids from each player."""
+    for i in xrange(num_players):
+      # Proceed clockwise starting from the dealer's left.
+      bidder = (self.dealer + 1) + i
+      self.player_bids[bidder] = self._GetValidBid(self.GetPlayerByIndex(bidder))
+
   def _GetTrickWinner(self):
-    """Determine who won the most recent trick"""
+    """Determine who won the most recent trick."""
+    spades = [(c.number, i) for (i, c) in enumerate(self.cards_played) if c.suit == "spades"]
+    if spades:
+      return max(spades)[-1]
+    lead_suit = self.cards_played[0].suit
+    return max((c.number, i) for (i, c) in enumerate(self.cards_played) if c.suit == lead_suit)[-1]
+
+  def _GetValidBid(self, player):
+    """Get a valid bid from the given player."""
+    return player.GetBid(*self._GetValidBidAmounts(player))
+
+  def _GetValidBidAmounts(self, player):
+    """Return a list of valid bids for the given player based on the current state."""
+    return ("Bid must be between 1 and 13, inclusive", list(xrange(1, 14)))
 
   def _GetValidMoves(self, player):
     """Get a valid move from the given player."""
@@ -72,8 +93,7 @@ class Spades(TrickTakingGame):
     follow = [c for c in player.hand if c.suit == lead_suit]
     if follow:
       return ("Must follow suit", follow)
-    # If can't follow suit and this is the first trick, cannot play spades if
-    # hand has other suits.
+    # If can't follow suit and this is the first trick, cannot play spades if hand has other suits.
     if self.trick_num == 1:
       other = any(c.suit != "spades" for c in player.hand)
       return ("Cannot play spades on the first trick (unless all spades)",
@@ -82,23 +102,18 @@ class Spades(TrickTakingGame):
     return (None, list(player.hand))
 
   def _GetValidPlay(self, player):
+    """Get a valid move from the given player."""
     card = player.GetPlay(*self._GetValidMoves(player))
     if card.suit == "spades" and not self.spades_broken:
       self.spades_broken = True
     return card
 
-  def _GetValidBidAmounts(self, player):
-    """Return a list of valid bids for the given player based on the current state."""
-    return ("Bid must be between 1 and 13, inclusive", range(1, 14))
-
-  def _GetValidBid(self, player):
-    """Get a valid bid from the given player."""
-    return player.GetBid(*self._GetValidBidAmounts(player))
-
   def _IsTerminal(self):
+    """Return True iff the game has ended. The game ends when a team's score is >= 500."""
     return max(self.team_scores) >= 500
 
   def _NewRound(self):
+    """Start a new round of the game."""
     self.round_num += 1
     if self.round_num == 1:
       self._state.dealer = 0
@@ -106,9 +121,9 @@ class Spades(TrickTakingGame):
       self.dealer = self.GetPlayerByIndex(self.dealer + 1)
     self._state.update({
         "cards_played": [],
+        "lead": self.dealer + 1,
         "player_bids": [0] * 4
         "spades_broken": False,
-        "lead": self.dealer + 1,
         "trick_num": 0,
     })
     self.ResetPlayers()
@@ -116,30 +131,23 @@ class Spades(TrickTakingGame):
     self._DealCards(0, (len(self.deck) // self.num_players, [1] * self.num_players))
 
   def _ScoreRound(self):
-    """Update team scores"""
+    """Update team scores."""
     tricks_taken = [len(p.hand) / 4 for p in self.players]
     team_bids = [self.player_bids[0] + self.player_bids[2], self.player_bids[1] + self.player_bids[3]]
     team_taken = [tricks_taken[0] + tricks_taken[2], tricks_taken[1] + tricks_taken[3]]
 
     for i in xrange(2):
-      # If the team took less than they bid, penalize them 10 per bid
+      # If the team took less than they bid, penalize them 10 per bid.
       if team_bids[i] > team_taken[i]:
         self.team_scores[i] -= 10 * team_bids[i]
-      # Otherwise, add 10 per bid plus 1 per extra trick ("bag") taken
+      # Otherwise, add 10 per bid plus 1 per extra trick ("bag") taken.
       else:
         num_bags = team_taken[i] - team_bids[i]
         self.team_scores[i] += 10 * team_taken + num_bags
 
-      # Update individual player scores based on new team scores
+      # Update individual player scores based on new team scores.
       self.players[i] = self.team_scores[i]
       self.players[i + 2] = self.team_scores[i]
-
-  def _Bid(self):
-    """Get bids from each player."""
-    for i in xrange(num_players):
-      # Proceed clockwise starting from the dealer's left
-      bidder = self.dealer + 1 + i
-      self.player_bids[bidder] = GetValidBid(GetPlayerByIndex(bidder))
 
 
 if __name__ == "__main__":

@@ -42,6 +42,7 @@ class Player(object):
     if num_bids < 1:
       raise ValueError("num_bids must be positive, got %d" % num_bids)
     bids = []
+    result = bids if num_bids > 1 else bids[0]
     if callback is None:
       return result
     callback(result)
@@ -52,6 +53,7 @@ class Player(object):
       raise ValueError("num_cards must be positive, got %d" % num_cards)
     cards = []
     self.hand.Remove(*cards)
+    result = cards if num_cards > 1 else cards[0]
     if callback is None:
       return result
     callback(result)
