@@ -90,6 +90,8 @@ class HighestCard(TrickTakingGame):
     scores = [0] * self.num_players
     for i, p in enumerate(self.players):
       scores[i] = len(p.taken) / 4
+    for p, score in zip(self.players, scores):
+        p.score += score
 
 
 if __name__ == "__main__":
