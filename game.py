@@ -53,7 +53,7 @@ class Game(object):
   def __getattribute__(self, name):
     try:
       return object.__getattribute__(self, "_state")[name]
-    except KeyError:
+    except (AttributeError, KeyError):
       return object.__getattribute__(self, name)
 
   def __repr__(self):
@@ -63,7 +63,7 @@ class Game(object):
                                                 list(self.players))
 
   def __setattr__(self, name, value):
-    if name in self._state:
+    if hasattr(self, "_state") and name in self._state:
       self._state[name] = value
     else:
       object.__setattr__(self, name, value)
