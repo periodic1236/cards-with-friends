@@ -13,8 +13,8 @@ class HighestCard(TrickTakingGame):
   """The Highest Card card game."""
 
   def __init__(self, players, deck=None, manager=None):
-    if len(players) != 4:
-      raise ValueError("Highest Card is a 4-player game, got {} players".format(len(players)))
+    if len(players) != 2:
+      raise ValueError("Highest Card is a 2-player game, got {} players".format(len(players)))
     super(HighestCard, self).__init__(players, deck or "standard", manager)
     self.ResetGame()
 
@@ -27,7 +27,7 @@ class HighestCard(TrickTakingGame):
       # Identify first player of the round.
       self.lead = self._FindFirstPlayer()
       # Play 13 tricks.
-      for _ in xrange(13):
+      for _ in xrange(len(self.deck) // self.num_players):
         self.trick_num += 1
         self.cards_played = []
         # Have each player play a valid card for the trick.
