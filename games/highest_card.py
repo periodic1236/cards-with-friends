@@ -27,7 +27,7 @@ class HighestCard(TrickTakingGame):
       # Identify first player of the round.
       self.lead = self._FindFirstPlayer()
       # Play 13 tricks.
-      for _ in xrange(len(self.deck) // self.num_players):
+      for _ in xrange(26):
         self.trick_num += 1
         self.cards_played = []
         # Have each player play a valid card for the trick.
