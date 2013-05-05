@@ -29,7 +29,7 @@ function add_card_to_hand(playerNum, card) {
   }
 }
 
-function start_turn(playerNum, allowed_cards){
+function get_card(playerNum, allowed_cards){
   //alert('Your turn! ' + allowed_cards);
   if (playerNum == myPlayerNum){  
     allowedCards = allowed_cards;
@@ -52,7 +52,7 @@ socket.on('player_num', function(playernum) {
 
 socket.on('add_to_hand', add_card_to_hand);
 
-socket.on('start_turn', start_turn);
+socket.on('get_card', get_card);
 
 $(document).ready(function() {
   $('#hand').css('display', 'none')

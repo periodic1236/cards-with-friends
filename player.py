@@ -10,6 +10,7 @@ import collections
 import uuid
 from card import Card
 from pylib import utils
+import card_frontend
 
 
 class Player(object):
@@ -52,10 +53,12 @@ class Player(object):
     callback(result)
 
   def GetPlay(self, error_msg, valid_plays, num_cards=1, callback=None):
-    # TODO(brazon): Interact with front-end to get card.
     if num_cards < 1:
       raise ValueError("num_cards must be positive, got %d" % num_cards)
+    if num_cards > 1:
+      raise NotImplementedError("Multi-card moves break things")
     cards = []
+    card_frontend.GetCardFromPlayer(self._name, valid_plays, cards)
     self.hand.Remove(*cards)
     result = cards if num_cards > 1 else cards[0]
     if callback is None:
