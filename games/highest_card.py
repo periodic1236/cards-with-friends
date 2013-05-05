@@ -20,14 +20,15 @@ class HighestCard(TrickTakingGame):
 
   def PlayGame(self):
     """Play the game."""
-    # Play until someone's score is >= 20.
+    # Play until someone's score is >= 6.
     while not self._IsTerminal():
       # Reset hands, shuffle, and deal cards.
       self._NewRound()
       # Identify first player of the round.
       self.lead = self._FindFirstPlayer()
-      # Play 13 tricks.
-      for _ in xrange(26):
+      # Play tricks.
+      #for _ in xrange(len(self.deck) // self.num_players):
+      for _ in xrange(5):
         self.trick_num += 1
         self.cards_played = []
         # Have each player play a valid card for the trick.
@@ -71,7 +72,7 @@ class HighestCard(TrickTakingGame):
 
   def _IsTerminal(self):
     """Return True iff the game has ended. The game ends when someone's score is >= 100."""
-    return max([player.score for player in self.players]) >= 20
+    return max([player.score for player in self.players]) >= 6
 
   def _NewRound(self):
     """Start a new round of the game."""
@@ -89,9 +90,9 @@ class HighestCard(TrickTakingGame):
     """Update scores."""
     scores = [0] * self.num_players
     for i, p in enumerate(self.players):
-      scores[i] = len(p.taken) / 4
+      scores[i] = len(p.taken) / self.num_players
     for p, score in zip(self.players, scores):
-        p.score += score
+      p.AddToScore(score)
 
 
 if __name__ == "__main__":
