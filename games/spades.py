@@ -43,7 +43,6 @@ class Spades(TrickTakingGame):
       self._ScoreRound()
     return sorted(self._players, key=lambda x: x.score)
 
-
   def ResetGame(self):
     """Reset the entire game state."""
     # Initialize players.
@@ -116,7 +115,7 @@ class Spades(TrickTakingGame):
     """Start a new round of the game."""
     self.round_num += 1
     if self.round_num == 1:
-      self._state.dealer = 0
+      self.dealer = 0
     else:
       self.dealer = self.GetPlayerByIndex(self.dealer + 1)
     self._state.update({
@@ -132,8 +131,9 @@ class Spades(TrickTakingGame):
 
   def _ScoreRound(self):
     """Update team scores."""
-    tricks_taken = [len(p.hand) / 4 for p in self.players]
-    team_bids = [self.player_bids[0] + self.player_bids[2], self.player_bids[1] + self.player_bids[3]]
+    tricks_taken = [len(p.hand) // self.num_players for p in self.players]
+    team_bids = [self.player_bids[0] + self.player_bids[2],
+                 self.player_bids[1] + self.player_bids[3]]
     team_taken = [tricks_taken[0] + tricks_taken[2], tricks_taken[1] + tricks_taken[3]]
 
     for i in xrange(2):
@@ -146,8 +146,8 @@ class Spades(TrickTakingGame):
         self.team_scores[i] += 10 * team_taken + num_bags
 
       # Update individual player scores based on new team scores.
-      self.players[i] = self.team_scores[i]
-      self.players[i + 2] = self.team_scores[i]
+      self.players[i].score = self.team_scores[i]
+      self.players[i + 2].score = self.team_scores[i]
 
 
 if __name__ == "__main__":

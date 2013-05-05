@@ -49,6 +49,7 @@ class Game(object):
       raise ValueError("Players cannot be empty")
     self._players = [Player(name) for name in players]
     self._num_players = len(self.players)
+    self._dealer = None
 
   def __getattribute__(self, name):
     try:
@@ -96,6 +97,10 @@ class Game(object):
   @property
   def dealer(self):
     return self._dealer
+
+  @dealer.setter
+  def dealer(self, value):
+    self._dealer = value
 
   @property
   def deck(self):

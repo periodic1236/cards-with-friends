@@ -58,7 +58,20 @@ def ConvertLabel(label, type_):
     return label
 
 
+def FindCard(cards, **props):
+  """Find a card given its properties within some sequence of cards. Returns the first match.
+
+  If card is not found, the result is False.
+  """
+  try:
+    return next(c for c in cards if all(getattr(c, k, None) == v for k, v in props.items()))
+  except StopIteration:
+    return False
+
+
 def Sanitize(string, repl="-"):
+  if not isinstance(string, (str, unicode)):
+    raise TypeError("Expected string argument, got type '{}'".format(type(string)))
   return string
   # return _NON_ALPHANUM_RE.sub(repl, string)
   # return _WHITESPACE_RE.sub(repl, string)

@@ -9,6 +9,7 @@ __author__ = "ding@caltech.edu (David Ding)"
 import collections
 import uuid
 from card import Card
+from pylib import utils
 
 
 class Player(object):
@@ -16,7 +17,7 @@ class Player(object):
 
   def __init__(self, name):
     self._id = uuid.uuid4()
-    self._name = name
+    self._name = utils.Sanitize(name)
     self._hand = Hand(self)
     self._taken = set()
     self._score = None
@@ -30,6 +31,9 @@ class Player(object):
 
   def AddToHand(self, *cards):
     return self.hand.Add(*cards)
+
+  def AddToScore(self, score):
+    self.score += score
 
   def ClearHand(self):
     self.hand.Clear()
@@ -83,6 +87,10 @@ class Player(object):
   @property
   def money(self):
     return self._money
+
+  @money.setter
+  def money(self, value):
+    self._money = value
 
   @property
   def name(self):

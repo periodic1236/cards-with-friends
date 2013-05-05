@@ -83,17 +83,20 @@ class Deck(collections.Iterator):
     return [next(self) for _ in xrange(num_cards)]
 
   def FindAndRemoveCard(self, **props):
-    """Find a card given its properties and remove the first occurrence from the deck."""
-    for card in self._cards:
-      if all(getattr(card, key, None) == value for key, value in props.items()):
-        self._cards.remove(card)
-        return True
-    return False
+    """Find a card given its properties and remove the first match from the deck."""
+    card = utils.FindCard(self._cards, **props)
+    if not card:
+      raise ValueError("Unable to find card in this deck: {}".format(props))
+    self._cards.remove(card)
+    if card in self._deck:
+      self._deck.remove(card)
+    return True
 
   def GetBackImage(self):
     return Image.open(self.back_image_loc)
 
   def Shuffle(self, reset=True):
+    """Shuffle the deck."""
     if reset:
       self._deck = list(self._cards)
     random.shuffle(self._deck)
