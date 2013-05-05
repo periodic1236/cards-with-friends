@@ -63,7 +63,6 @@ class Deck(collections.Iterator):
       utils.CheckJSON(c, "card", card_keys)
       props = dict((l.name, utils.ConvertLabel(c[l.name], l.type)) for l in d.labels)
       deck._AddCard(c.name, c.long_name, c.image_loc, **props)
-    deck.Shuffle()
     return deck
 
   def next(self):
@@ -82,6 +81,14 @@ class Deck(collections.Iterator):
     if len(self) < num_cards:
       raise IndexError("Tried to draw %d cards, but deck has %d." % (num_cards, self.num_cards))
     return [next(self) for _ in xrange(num_cards)]
+
+  def FindAndRemoveCard(self, **props):
+    """Find a card given its properties and remove the first occurrence from the deck."""
+    for card in self._cards:
+      if all(getattr(card, key, None) == value for key, value in props.items()):
+        self._cards.remove(card)
+        return True
+    return False
 
   def GetBackImage(self):
     return Image.open(self.back_image_loc)

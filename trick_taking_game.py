@@ -32,7 +32,7 @@ class TrickTakingGame(Game):
     Usage:
       self.DealCards(0, (13, [1, 1, 1, 1]))
     """
-    if not isinstance(first, Player) and not isinstance(first, int):
+    if not isinstance(first, (Player, int)):
       raise TypeError("first must be a Player or int, got type '{}'".format(type(first)))
     try:
       deal_idx = first if isinstance(first, int) else self.GetPlayerIndex(first)

@@ -13,9 +13,14 @@ class Hearts(TrickTakingGame):
   """The Hearts card game."""
 
   def __init__(self, players, deck=None, manager=None):
-    if len(players) != 4:
-      raise ValueError("Hearts is a 4-player game, got {} players".format(len(players)))
+    if len(players) not in (3, 4, 5):
+      raise ValueError("Hearts is a 3 to 5 player game, got {} players".format(len(players)))
     super(Hearts, self).__init__(players, deck or "standard", manager)
+    if self.num_players == 3:
+      self.deck.FindAndRemoveCard(name="2D")
+    elif self.num_players == 5:
+      self.deck.FindAndRemoveCard(name="2C")
+      self.deck.FindAndRemoveCard(name="2D")
     self.ResetGame()
 
   def PlayGame(self):
@@ -55,7 +60,8 @@ class Hearts(TrickTakingGame):
 
   def _FindFirstPlayer(self):
     """Find the first player of a round. The first player has the two of clubs."""
-    return next(i for (i, p) in enumerate(self.players) if any(c.name == "2C" for c in p.hand))
+    start = "3C" if self.num_players == 5 else "2C"
+    return next(i for (i, p) in enumerate(self.players) if any(c.name == start for c in p.hand))
 
   def _GetPlayAndCheck(self, player):
     card = None

@@ -78,7 +78,7 @@ class Game(object):
       raise ValueError("Player '{}' not found in this game".format(name))
 
   def GetPlayerIndex(self, player):
-    if not isinstance(player, Player) and not isinstance(player, int):
+    if not isinstance(player, (Player, int)):
       raise TypeError("player must be a Player or int, got type '{}'".format(type(player)))
     try:
       return player % self.num_players if isinstance(player, int) else self.players.index(player)
