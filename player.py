@@ -8,6 +8,7 @@ __author__ = "ding@caltech.edu (David Ding)"
 
 import collections
 import uuid
+import weakref
 from card import Card
 from pylib import utils
 import card_frontend
@@ -23,6 +24,7 @@ class Player(object):
     self._taken = set()
     self._score = None
     self._money = None
+    self._subscribers = weakref.WeakKeyDictionary()
 
   def __repr__(self):
     return "{}({}, score={}, uuid={})".format(self.__class__.__name__,
@@ -30,17 +32,29 @@ class Player(object):
                                               self.score,
                                               self.id)
 
+  def _NotifySubs(self):
+    for cv in self._subscribers:
+      if not cv.acquire(blocking=False):
+        continue
+      cv.notify()
+      cv.release()
+
   def AddToHand(self, *cards):
-    return self.hand.Add(*cards)
+    result = self.hand.Add(*cards)
+    self._NotifySubs()
+    return result
 
   def AddToScore(self, score):
     self.score += score
+    self._NotifySubs()
 
   def ClearHand(self):
     self.hand.Clear()
+    self._NotifySubs()
 
   def ClearTaken(self):
     self.taken.clear()
+    self._NotifySubs()
 
   def GetBid(self, error_msg, valid_bids, num_bids=1, callback=None):
     # TODO(brazon): Interact with front-end to get bid.
@@ -72,11 +86,17 @@ class Player(object):
       return result
     callback(result)
 
+  def Subscribe(self, ref, condition):
+    if ref in self._subscribers:
+      raise ValueError("Already subscribed to this player")
+    self._subscribers[ref] = condition
+
   def Take(self, *cards):
     if not all(isinstance(item, Card) for item in cards):
       # TODO(mqian): Raise a more meaningful error.
       raise TypeError
     self.taken |= set(cards)
+    self._NotifySubs()
     return True
 
   @property
@@ -94,6 +114,7 @@ class Player(object):
   @money.setter
   def money(self, value):
     self._money = value
+    self._NotifySubs()
 
   @property
   def name(self):
@@ -106,6 +127,7 @@ class Player(object):
   @score.setter
   def score(self, value):
     self._score = value
+    self._NotifySubs()
 
   @property
   def taken(self):
@@ -120,6 +142,8 @@ class Hand(object):
     self._cards = set()
 
   def __contains__(self, item):
+    if isinstance(item, (str, unicode)):
+      return bool(utils.FindCard(self._cards, name=item))
     return item in self._cards
 
   def __iter__(self):
@@ -127,6 +151,9 @@ class Hand(object):
 
   def __len__(self):
     return len(self._cards)
+
+  def __nonzero__(self):
+    return bool(self._cards)
 
   def __repr__(self):
     return "{}({})".format(self.__class__.__name__, self._cards)

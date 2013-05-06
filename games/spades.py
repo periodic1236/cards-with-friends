@@ -55,7 +55,7 @@ class Spades(TrickTakingGame):
 
   def _Bid(self):
     """Get bids from each player."""
-    for i in xrange(num_players):
+    for i in xrange(self.num_players):
       # Proceed clockwise starting from the dealer's left.
       bidder = (self.dealer + 1) + i
       self.player_bids[bidder] = self._GetValidBid(self.GetPlayerByIndex(bidder))
@@ -121,7 +121,7 @@ class Spades(TrickTakingGame):
     self._state.update({
         "cards_played": [],
         "lead": self.dealer + 1,
-        "player_bids": [0] * 4
+        "player_bids": [0] * 4,
         "spades_broken": False,
         "trick_num": 0,
     })
