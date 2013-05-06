@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<!-- cards.html 5/5/2013 Ben Razon-->
+
+<html lang='en'>
+<head>
+  <link rel="stylesheet" type="text/css" 
+    href="{{ url_for('static', filename='main.css') }}" />
+
+    <meta charset="UTF-8" /> 
+    <title>
+        Cards With Friends
+    </title>
+
+</head>
+
+<body>
+<h1>
+    Cards With Friends
+</h1>
+<div>
+  <p>Here at Cards With Friends we aim to allow you to play any card game. If we don't support a game you want, you can create and upload rules for it.</p>
+  <p>You can play games by logging in <a href="{{url_for("login")}}">here</a>
+or learn more about creating games <a href="{{url_for("documentation")}}">here</a>
+</div>
+</body>
+</html>

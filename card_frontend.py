@@ -14,6 +14,12 @@ def GetCardFromPlayer(player, valid_plays, cards, num_cards=1):
     sleep(1)
   cards.append(player_socket.cardPlayed)
 
+def HandleLogin(nickname):
+  if nickname in CardNamespace.players:
+    return False
+  else:
+    CardNamespace.players[nickname] = None
+    return True
 
 # The socket.io namespace
 # always extend BaseNamespace; also add mixins if you want
@@ -46,8 +52,7 @@ class CardNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
             raise Exception('Too many players!')
 
         # add myself to list of players
-        if nickname in CardNamespace.players:
-          raise NotImplementedError("Player Name Conflict")
+        # TODO This seems really insecure...
         CardNamespace.players[nickname] = self
 
         # send message to my client (only) with player num
@@ -72,6 +77,8 @@ class CardNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
         self.hand.append(card)
         self.emit('add_to_hand', self.player_num, card)
 
-    # start my turn
-    def get_card(self, cards_allowed):
-        self.emit('get_card', self.player_num, cards_allowed)
+  # start my turn
+  def get_card(self, cards_allowed):
+    #TODO Figure out how to pass card objects to frontend
+    #print cards_allowed
+    self.emit('get_card', self.player_num, cards_allowed)

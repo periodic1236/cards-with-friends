@@ -36,12 +36,12 @@ function get_card(playerNum, allowed_cards){
   }
 }
 
-function login() {
-  nickname = $('#nick').val();
+function login(nickname) {
+  //nickname = $('#nick').val();
   socket.emit('login', nickname);
   console.log("nickname: ", nickname);
-  $('#hand').css('display', 'block');
-  $('#loginForm').css('display','none');
+  //$('#hand').css('display', 'block');
+  //$('#loginForm').css('display','none');
   return false;
 }
 

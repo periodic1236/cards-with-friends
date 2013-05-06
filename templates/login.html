@@ -2,20 +2,14 @@
 <html lang='en'>
   <head>
     <title>Login to Cards-With-Friends</title>
-    <script type="text/javascript" 
-      src="{{ url_for('static', filename='jquery.js') }}"></script>
-    <script type="text/javascript"
-      src="{{ url_for('static', filename='socket.io.js') }}"></script>
-    <script type="text/javascript"
-      src="{{ url_for('static', filename='main.js') }}"></script>
     <link rel="stylesheet" type="text/css" 
       href="{{ url_for('static', filename='main.css') }}" />
   </head>
   <body>
-  <form NAME="loginForm">
+  <form NAME="loginForm" method='post'>
     <h1>Login to Cards With Friends</h1>
-	<p>Username: <input type="text" id="nick" autofocus /> </p>
-	<p> <input type="submit" name="loginUsername" onclick="login()" /> </p>
+	<p>Nickname: <input type="text" name="nick" id="nick" autofocus /> </p>
+	<p> <input type="submit" value=Login /> </p>
   </form>
   </body>
 </html>
