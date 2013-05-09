@@ -44,6 +44,12 @@ def documentation():
 def games():
   return render_template('games.html')
 
+
+@app.route('/game_table')
+@login_required
+def game_table():
+  return render_template('game_table.html')
+
 # this runs as soon as a client is started
 @app.route("/socket.io/<path:path>")
 def run_socketio(path):

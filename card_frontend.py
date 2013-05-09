@@ -77,8 +77,7 @@ class CardNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
         self.hand.append(card)
         self.emit('add_to_hand', self.player_num, card)
 
-  # start my turn
-  def get_card(self, cards_allowed):
-    #TODO Figure out how to pass card objects to frontend
-    #print cards_allowed
-    self.emit('get_card', self.player_num, cards_allowed)
+    # start my turn
+    def get_card(self, cards_allowed):
+        #TODO Figure out how to pass card objects to frontend
+        self.emit('get_card', self.player_num, cards_allowed)
