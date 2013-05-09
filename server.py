@@ -45,6 +45,12 @@ def room_list():
   print 'new room'
   return render_template('room_list.html')
 
+
+@app.route('/game_table')
+@login_required
+def game_table():
+  return render_template('game_table.html')
+
 # this runs as soon as a client is started
 @app.route("/socket.io/<path:path>")
 def run_socketio(path):

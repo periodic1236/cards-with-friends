@@ -91,7 +91,6 @@ class CardNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
     # start my turn
     def get_card(self, cards_allowed):
         #TODO Figure out how to pass card objects to frontend
-        #print cards_allowed
         self.emit('get_card', self.player_num, cards_allowed)
 
     # -- Events for room list --
@@ -216,4 +215,3 @@ class Room:
     def delete(self):
         for p in self.players:
             p.my_room = None
-        

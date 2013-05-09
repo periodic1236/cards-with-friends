@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<!-- cards.html 4/22/2013 Theresa Lee-->
+
+<html lang='en'>
+<head>
+  <script type="text/javascript" 
+    src="{{ url_for('static', filename='jquery.js') }}"></script>
+  <script type="text/javascript"
+    src="{{ url_for('static', filename='socket.io.js') }}"></script>
+  <script type="text/javascript"
+    src="{{ url_for('static', filename='main.js') }}"></script>
+<script type="text/javascript"
+    src="{{ url_for('static', filename='room_list.js') }}"></script>
+  <script type="text/javascript">
+    reconnect('{{ session.nickname }}');
+    request_room_list();
+  </script>
+  <link rel="stylesheet" type="text/css" 
+    href="{{ url_for('static', filename='main.css') }}" />
+
+    <meta charset="UTF-8" /> 
+    <title>
+        Cards With Friends
+    </title>
+
+</head>
+
+<body>
+<h1>
+    Cards With Friends
+</h1>
+
+<!-- New room button -->
+<input id="new_room_button" type="button" value="New Room" onclick="create_room();" />
+
+<!-- List of rooms -->
+<div id="room_list"/>
+
+
+<div id="hand">
+<!-- 
+<img class="card" src="card_images/std_3_C.png" />
+<img class="card" src="card_images/std_4_H.png" /> -->
+</div>
+</body>
+</html>
