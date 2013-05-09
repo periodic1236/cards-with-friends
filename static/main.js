@@ -1,4 +1,5 @@
-var myPlayerNum = 0;
+//var my_player_num = 0;
+//var my_player_name = "";
 var cardImagePath = "static/card_images/";
 var allowedCards = [];
 var socket = io.connect();
@@ -31,7 +32,7 @@ function add_card_to_hand(playerNum, card) {
 
 function get_card(playerNum, allowed_cards){
   //alert('Your turn! ' + allowed_cards);
-  if (playerNum == myPlayerNum){  
+  if (playerNum == myPlayerNum){
     allowedCards = allowed_cards;
   }
 }
@@ -45,9 +46,17 @@ function login(nickname) {
   return false;
 }
 
+// page refreshed, need to keep sockets up to date
+function reconnect(nickname) {
+    socket.emit('reconnect', nickname);
+}
 
-socket.on('player_num', function(playernum) {
-  myPlayerNum = playernum;
+//socket.on('player_num', function(playernum) {
+//  myPlayerNum = playernum;
+//});
+
+socket.on('player_name', function(nickname) {
+  myPlayerName = nickname;
 });
 
 socket.on('add_to_hand', add_card_to_hand);

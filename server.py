@@ -28,7 +28,7 @@ def login():
     print nickname
     if HandleLogin(nickname):
       session['nickname'] = nickname
-      return redirect(url_for('games'))
+      return redirect(url_for('room_list'))
     else:
       flash('Nickname is already taken. Pick another one.')
       return render_template('login.html')
@@ -39,10 +39,11 @@ def documentation():
   #TODO write documentation page
   return render_template('documentation.html')
 
-@app.route('/games')
+@app.route('/room_list', methods=['GET', 'POST'])
 @login_required
-def games():
-  return render_template('games.html')
+def room_list():
+  print 'new room'
+  return render_template('room_list.html')
 
 # this runs as soon as a client is started
 @app.route("/socket.io/<path:path>")
