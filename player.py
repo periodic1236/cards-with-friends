@@ -8,23 +8,22 @@ __author__ = "ding@caltech.edu (David Ding)"
 
 import collections
 import uuid
-import weakref
 from card import Card
-from pylib import utils
 import card_frontend
+from pylib import utils
 
 
-class Player(object):
+class Player(utils.MessageMixin):
   """A player in a game."""
 
   def __init__(self, name):
+    super(Player, self).__init__()
     self._id = uuid.uuid4()
     self._name = utils.Sanitize(name)
-    self._hand = Hand(self)
+    self._hand = _Hand(self)
     self._taken = set()
     self._score = None
     self._money = None
-    self._subscribers = weakref.WeakKeyDictionary()
 
   def __repr__(self):
     return "{}({}, score={}, uuid={})".format(self.__class__.__name__,
@@ -32,71 +31,51 @@ class Player(object):
                                               self.score,
                                               self.id)
 
-  def _NotifySubs(self):
-    for cv in self._subscribers:
-      if not cv.acquire(blocking=False):
-        continue
-      cv.notify()
-      cv.release()
-
   def AddToHand(self, *cards):
-    result = self.hand.Add(*cards)
-    self._NotifySubs()
-    return result
+    return self.hand.Add(*cards)
 
   def AddToScore(self, score):
     self.score += score
-    self._NotifySubs()
 
   def ClearHand(self):
     self.hand.Clear()
-    self._NotifySubs()
 
   def ClearTaken(self):
     self.taken.clear()
-    self._NotifySubs()
+    self.Notify(self, "clear_taken")
 
-  def GetBid(self, error_msg, valid_bids, num_bids=1, callback=None):
-    # TODO(brazon): Interact with front-end to get bid.
-    if num_bids < 1:
-      raise ValueError("num_bids must be positive, got %d" % num_bids)
-    bids = []
-    result = bids if num_bids > 1 else bids[0]
+  def GetBid(self, error_msg, valid_bids, callback=None):
+    bid = self.Request(self, "get_bid", valid_bids=valid_bids)
     if callback is None:
-      return result
-    callback(result)
+      return bid
+    callback(bid)
 
   def GetPlay(self, error_msg, valid_plays, num_cards=1, callback=None):
     if num_cards < 1:
-      raise ValueError("num_cards must be positive, got %d" % num_cards)
+      raise ValueError("num_cards must be positive, got {}".format(num_cards))
+    # TODO(brazon): Figure out what to do about multi-card plays...
     if num_cards > 1:
       raise NotImplementedError("Multi-card moves break things")
-    cards = []
-    card_frontend.GetCardFromPlayer(self._name, valid_plays, cards)
+    cards = self.Request(self, "get_play", valid_plays=valid_plays, num_cards=num_cards)
     self.hand.Remove(*cards)
-    result = cards if num_cards > 1 else cards[0]
     if callback is None:
-      return result
-    callback(result)
+      return cards
+    callback(cards)
 
   def MaybeGetPlay(self, num_cards=1, callback=None):
     # TODO(brazon)
-    result = None
+    cards = None
     if callback is None:
-      return result
-    callback(result)
-
-  def Subscribe(self, ref, condition):
-    if ref in self._subscribers:
-      raise ValueError("Already subscribed to this player")
-    self._subscribers[ref] = condition
+      return cards
+    callback(cards)
 
   def Take(self, *cards):
-    if not all(isinstance(item, Card) for item in cards):
+    temp = set(cards)
+    if not all(isinstance(item, Card) for item in temp):
       # TODO(mqian): Raise a more meaningful error.
       raise TypeError
-    self.taken |= set(cards)
-    self._NotifySubs()
+    self.taken |= temp
+    self.Notify(self, "take_trick", cards=temp)
     return True
 
   @property
@@ -114,7 +93,7 @@ class Player(object):
   @money.setter
   def money(self, value):
     self._money = value
-    self._NotifySubs()
+    self.Notify(self, "update_money", money=value)
 
   @property
   def name(self):
@@ -127,14 +106,14 @@ class Player(object):
   @score.setter
   def score(self, value):
     self._score = value
-    self._NotifySubs()
+    self.Notify(self, "update_score", score=value)
 
   @property
   def taken(self):
     return self._taken
 
 
-class Hand(object):
+class _Hand(utils.MessageMixin):
   """A player's hand."""
 
   def __init__(self, player):
@@ -160,15 +139,18 @@ class Hand(object):
 
   def Add(self, *cards):
     """Add one or more cards to the player's hand."""
-    if not all(isinstance(item, Card) for item in cards):
+    temp = set(cards)
+    if not all(isinstance(item, Card) for item in temp):
       # TODO(mqian): Raise a more meaningful error.
       raise TypeError
-    self._cards |= set(cards)
+    self._cards |= temp
+    self.Notify(self.player, "add_card", cards=temp)
     return True
 
   def Clear(self):
     """Remove all cards from the player's hand."""
     self._cards.clear()
+    self.Notify(self.player, "clear_hand")
 
   def Remove(self, *cards):
     """Remove one or more cards from the player's hand."""
@@ -177,7 +159,12 @@ class Hand(object):
       # TODO(mqian): Raise a more meaningful error.
       raise ValueError
     self._cards -= temp
+    self.Notify(self.player, "remove_card", cards=temp)
     return True
+
+  @property
+  def player(self):
+    return self._player
 
 
 if __name__ == "__main__":

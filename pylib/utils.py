@@ -7,9 +7,14 @@
 __author__ = "mqian@caltech.edu (Mike Qian)"
 
 import collections
+import json
 import os
 import re
+import socket
+import threading
+import card_frontend
 
+_BUFSIZE = 4096
 _LABEL_TYPES = {
     "array": list,
     "boolean": bool,
@@ -17,6 +22,7 @@ _LABEL_TYPES = {
     "integer": int,
     "string": unicode,
 }
+_MESSAGE_SEP = "\r\n\r\n"
 _NON_ALPHANUM_RE = re.compile(r"[^A-Za-z0-9]+")
 _ROOT_DIR = os.getcwd()
 _WHITESPACE_RE = re.compile(r"\s", flags=re.UNICODE)
@@ -29,6 +35,62 @@ class AttributeDict(dict):
   def __init__(self, *args, **kwargs):
     super(AttributeDict, self).__init__(*args, **kwargs)
     self.__dict__ = self
+
+
+class MessageMixin(object):
+  """Mixin for message-passing."""
+
+  # Notification handlers.
+  __NOTICES = {
+      "add_card": card_frontend.PlayerAddToHand,
+      "clear_hand": card_frontend.PlayerClearHand,
+      "clear_taken": card_frontend.PlayerClearTaken,
+      "display_message": card_frontend.PlayerDisplayMessage,
+      "remove_card": card_frontend.PlayerRemoveFromHand,
+      "take_trick": card_frontend.PlayerTakeTrick,
+      "update_money": card_frontend.PlayerUpdateMoney,
+      "update_score": card_frontend.PlayerUpdateScore,
+  }
+
+  # Request hand
+  __REQUESTS = {
+      "get_bid": card_frontend.GetBidFromPlayer,
+      "get_play": card_frontend.GetCardFromPlayer,
+  }
+
+  def __init__(self):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.bind(("", 0))
+    self.__buffer = ""
+    self.__lock = threading.RLock()
+    self.__port = sock.getsockname()[-1]
+    self.__socket = sock
+
+  def Notify(self, player, action, **params):
+    if action not in self.__NOTICES:
+      raise ValueError("Notification '{}' not supported".format(action))
+    self.__ACTIONS[action](player, **params)
+
+  def Request(self, player, action, **params):
+    if action not in self.__REQUESTS:
+      raise ValueError("Request '{}' not supported".format(action))
+    return self.__REQUESTS[action](player, **params)
+
+  def ReceiveMessage(self):
+    with self.__lock:
+      while _MESSAGE_SEP not in self.__buffer:
+        self.__buffer += self.__socket.recv(_BUFSIZE)
+      data, self.__buffer = self.__buffer.split(_MESSAGE_SEP, 1)
+    return json.loads(data)
+
+  def SendMessage(self, **kwargs):
+    bytes = 0
+    data = json.dumps(kwargs) + _MESSAGE_SEP
+    while data:
+      sent = self.__socket.sendto(data[:_BUFSIZE], ("localhost", self.__port))
+      data = data[sent:]
+      bytes += sent
+    return bytes
 
 
 def CheckJSON(doc, type_, fields):

@@ -17,7 +17,7 @@ from pylib import utils
 NUM_THREADS = 8
 
 
-class Game(object):
+class Game(utils.MessageMixin):
   """A card game."""
 
   def __init__(self, players, deck, manager=None):
@@ -27,6 +27,8 @@ class Game(object):
       players: A sequence of player names (expected to be unique).
       deck: The name of the deck for this game.
     """
+    super(Game, self).__init__()
+
     # Container for state variables.
     self._state = utils.AttributeDict()
 

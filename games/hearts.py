@@ -61,7 +61,12 @@ class Hearts(TrickTakingGame):
   def _FindFirstPlayer(self):
     """Find the first player of a round. The first player has the two of clubs."""
     start = "3C" if self.num_players == 5 else "2C"
-    return next(i for (i, p) in enumerate(self.players) if any(c.name == start for c in p.hand))
+    return next(i for i, p in enumerate(self.players) if any(c.name == start for c in p.hand))
+
+  def _GetHighestCard(self, *cards):
+    """Compare two or more cards and return the highest-value card."""
+    values = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 1]
+    return max(cards, key=lambda x: values.index(x.number))
 
   def _GetPlayAndCheck(self, player):
     card = None
@@ -120,7 +125,9 @@ class Hearts(TrickTakingGame):
   def _GetTrickWinner(self):
     """Determine who won the most recent trick."""
     lead_suit = self.cards_played[0].suit
-    return max((c.number, i) for (i, c) in enumerate(self.cards_played) if c.suit == lead_suit)[-1]
+    return max(((c, i) for i, c in enumerate(self.cards_played) if c.suit == lead_suit),
+               key=lambda x: self._GetHighestCard(x[0]))[-1]
+    #return max((c.number, i) for i, c in enumerate(self.cards_played) if c.suit == lead_suit)[-1]
 
   def _GetValidMoves(self, player):
     """Return a list of valid moves for the given player based on the current state."""
