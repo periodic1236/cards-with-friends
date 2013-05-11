@@ -23,9 +23,6 @@ class TrickTakingGame(Game):
   def ResetGame(self, *args, **kwargs):
     raise NotImplementedError("This class should be implemented by users.")
 
-  def _CompareCards(self, *args, **kwargs):
-    raise NotImplementedError("This class should be implemented by users.")
-
   def _DealCards(self, first, *patterns):
     """Deal cards to players.
 
