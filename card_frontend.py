@@ -3,20 +3,8 @@ from gevent import sleep, monkey; monkey.patch_all()
 from socketio import socketio_manage
 from socketio.namespace import BaseNamespace
 from socketio.mixins import RoomsMixin, BroadcastMixin
-
-
-def GetBidFromPlayer(player, valid_bids):
-  # TODO(brazon)
-  return None
-
-def GetCardFromPlayer(player, valid_plays, num_cards=1):
-  # TODO(brazon): num_cards not being 1 probably breaks lots of stuff
-  player_socket = CardNamespace.players[player]
-  player_socket.cardPlayed = None
-  player_socket.get_card(valid_plays)
-  while player_socket.cardPlayed is None:
-    sleep(1)
-  return [player_socket.cardPlayed]
+from flask import session
+#TODO Figure out circular imports
 
 def HandleLogin(nickname):
   if nickname in CardNamespace.players:
@@ -25,39 +13,66 @@ def HandleLogin(nickname):
     CardNamespace.players[nickname] = None
     return True
 
+def SetPassword(nickname, password):
+  CardNamespace.passwords[nickname] = password
+
+def GetBidFromPlayer(player, valid_bids):
+  # TODO(brazon): Figure out frontend first
+  return None
+
+def GetCardFromPlayer(player, valid_plays, num_cards=1):
+  # TODO(brazon): num_cards not being 1 probably breaks lots of stuff
+  if num_cards != 1:
+    raise NotImplementedError('Multiple card plays are not supported yet.')
+  player_socket = CardNamespace.players[player]
+  player_socket.card = None
+  valid_plays_list = [x.id for x in valid_plays]
+  player_socket.get_card(valid_plays)
+  while player_socket.card is None:
+    sleep(1)
+  return [player_socket.card]
+
 def PlayerAddToHand(player, cards):
-  # TODO(brazon)
   # cards is a list of Card objects
+  player_socket = CardNamespace.players[player]
+  for card in cards:
+    player_socket.add_card(card.id, card.image_loc)
   pass
 
 def PlayerClearHand(player):
   # TODO(brazon)
+  player_socket = CardNamespace.players[player]
+  player_socket.clear_hand()
   pass
 
 def PlayerClearTaken(player):
-  # TODO(brazon)
+  # TODO(brazon) Ask Mike what this requires from frontend
   pass
 
 def PlayerDisplayMessage(player, message):
-  # TODO(brazon)
+  # TODO(brazon) Figure out frontend
   pass
 
 def PlayerRemoveFromHand(player, cards):
-  # TODO(brazon)
   # cards is a list of Card objects
+  player_socket = CardNamespace.players[player]
+  for card in cards:
+    player_socket.remove_card(card.id)
   pass
 
 def PlayerTakeTrick(player, cards):
-  # TODO(brazon)
+  # TODO(brazon) Ask Mike what this requires from frontend
   # cards is a list of Card objects
+  player_socket = CardNamespace.players[player]
+  player_socket.take_trick()
   pass
 
 def PlayerUpdateMoney(player, money):
-  # TODO(brazon)
+  # TODO(brazon) Figure out frontend first
   pass
 
 def PlayerUpdateScore(player, score):
-  # TODO(brazon)
+  # TODO(brazon) figure out frontend first
   pass
 
 # The socket.io namespace
@@ -68,69 +83,44 @@ class CardNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
   # state
   rooms = []  # (static) list of rooms (instances of Room), keys are game names
   players = {}  # (static) dict of players (instances of CardNamespace), keys are nicknames
+  passwords = {}
 
   my_room = None  # room that this player has joined
   isHost = 0  # 0 or 1 indicating whether this player is the host of my_room
   nickname = ""
 
-  # runs when client enters nickname to log in
-  # this is no longer called!!!
-  def on_login(self, nickname):
-
-    print "LOGIN!!"
-    
-    self.nickname = nickname
-    print "nickname: ", self.nickname
-
-    #self.player_num = CardNamespace.num_players
-    #CardNamespace.num_players += 1
-
-    # Empty hand
-    #self.hand = []
-
-    # Make sure there aren't too many players
-    #if self.player_num > CardNamespace.total_players:
-    #    raise Exception("Too many players!")
-
-    # add myself to list of players
-    # TODO This seems really insecure...
-    CardNamespace.players[nickname] = self
-
-    # send message to my client (only) with player num
-    #self.emit("player_num", self.player_num)
-
-    # Just have them join a default-named room
-    #self.join("main_room")
-
-    # if all players have joined, start game
-    #if CardNamespace.num_players == CardNamespace.total_players:
-    #  game = HighestCard(CardNamespace.players.keys())
-    #  game.PlayGame()
-
   # runs when client refreshes the page, keeps sockets up to date
-  def on_reconnect(self, nickname):
+  def on_reconnect(self, nickname, password):
     # add myself to list of players
     # TODO This seems really insecure...
-    # if session["nickname"] == nickname: # this gives error: "session" not defined
-    CardNamespace.players[nickname] = self
+    if CardNamespace.passwords[nickname] == password:
+      CardNamespace.players[nickname] = self
+    else:
+      raise RuntimeError('Incorrect Password')
 
     # this only needs to happen once but since on_login is not used anymore I decided to put it here
     self.nickname = nickname
 
   # runs when client plays a card
-  def on_card_played(self, card):
-    self.hand.remove(card)
-    self.cardPlayed = card
+  def on_card(self, card):
+    self.card = card
 
   # add card to hand
-  def add_card(self, card):
-    self.hand.append(card)
-    self.emit("add_to_hand", self.player_num, card)
+  def add_card(self, card, image):
+    self.emit("add_to_hand", self.player_num, card, image)
 
   # start my turn
   def get_card(self, cards_allowed):
-    #TODO Figure out how to pass card objects to frontend
     self.emit("get_card", self.player_num, cards_allowed)
+
+  def clear_hand(self):
+    self.emit("clear_hand", self.player_num)
+
+  def remove_card(self, card):
+    self.emit("remove_from_hand", self.player_num, card)
+
+  def take_trick(self):
+    self.emit("clear_trick")
 
   # -- Events for room list --
 
@@ -233,7 +223,7 @@ class Room(object):
   def __del__(self):
     for p in self.players:
       p.my_room = None
-  
+
   @property
   def num_players(self):
     return len(self.players)

@@ -12,7 +12,7 @@
 <script type="text/javascript"
     src="{{ url_for('static', filename='room_list.js') }}"></script>
   <script type="text/javascript">
-    reconnect('{{ session.nickname }}');
+    reconnect('{{ session.nickname }}', '{{ session.password|safe}}');
     request_room_list();
   </script>
   <link rel="stylesheet" type="text/css" 

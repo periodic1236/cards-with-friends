@@ -3,6 +3,8 @@ from flask import Flask, request, send_file, render_template, url_for, \
         redirect, flash, session
 import config
 from card_frontend import *
+from base64 import urlsafe_b64encode
+from os import urandom
 
 def login_required(f):
   @wraps(f)
@@ -28,6 +30,9 @@ def login():
     print nickname
     if HandleLogin(nickname):
       session['nickname'] = nickname
+      password = urlsafe_b64encode(urandom(64))
+      session['password'] = password
+      SetPassword(nickname, password)
       return redirect(url_for('room_list'))
     else:
       flash('Nickname is already taken. Pick another one.')
