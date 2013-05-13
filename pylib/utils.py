@@ -11,7 +11,6 @@ import json
 import os
 import re
 import socket
-import threading
 import card_frontend
 
 _BUFSIZE = 4096
@@ -26,8 +25,6 @@ _MESSAGE_SEP = "\r\n\r\n"
 _NON_ALPHANUM_RE = re.compile(r"[^A-Za-z0-9]+")
 _ROOT_DIR = os.getcwd()
 _WHITESPACE_RE = re.compile(r"\s", flags=re.UNICODE)
-CARD_IMG_BASE = "card_images"
-DECK_BASE = "decks"
 
 
 class AttributeDict(dict):
@@ -41,7 +38,7 @@ class MessageMixin(object):
   """Mixin for message-passing."""
 
   # Notification handlers.
-  __NOTICES = {
+  _NOTICES = {
       "add_card": card_frontend.PlayerAddToHand,
       "clear_hand": card_frontend.PlayerClearHand,
       "clear_taken": card_frontend.PlayerClearTaken,
@@ -52,8 +49,8 @@ class MessageMixin(object):
       "update_score": card_frontend.PlayerUpdateScore,
   }
 
-  # Request hand
-  __REQUESTS = {
+  # Request handlers.
+  _REQUESTS = {
       "get_bid": card_frontend.GetBidFromPlayer,
       "get_play": card_frontend.GetCardFromPlayer,
   }
@@ -62,25 +59,23 @@ class MessageMixin(object):
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.bind(("", 0))
     self.__buffer = ""
-    self.__lock = threading.RLock()
     self.__port = sock.getsockname()[-1]
     self.__socket = sock
 
   def Notify(self, player, action, **params):
-    if action not in self.__NOTICES:
+    if action not in self._NOTICES:
       raise ValueError("Notification '{}' not supported".format(action))
-    self.__ACTIONS[action](player, **params)
+    self._NOTICES[action](player, **params)
 
   def Request(self, player, action, **params):
-    if action not in self.__REQUESTS:
+    if action not in self._REQUESTS:
       raise ValueError("Request '{}' not supported".format(action))
-    return self.__REQUESTS[action](player, **params)
+    return self._REQUESTS[action](player, **params)
 
   def ReceiveMessage(self):
-    with self.__lock:
-      while _MESSAGE_SEP not in self.__buffer:
-        self.__buffer += self.__socket.recv(_BUFSIZE)
-      data, self.__buffer = self.__buffer.split(_MESSAGE_SEP, 1)
+    while _MESSAGE_SEP not in self.__buffer:
+      self.__buffer += self.__socket.recv(_BUFSIZE)
+    data, self.__buffer = self.__buffer.split(_MESSAGE_SEP, 1)
     return json.loads(data)
 
   def SendMessage(self, **kwargs):
@@ -104,7 +99,7 @@ def CheckJSON(doc, type_, fields):
 
 
 def CheckPath(path, basedir=None):
-  """Make sure the given path exists and does not break out of the root base directory."""
+  """Make sure the given path exists and does not break out of the root directory."""
   if basedir is not None:
     path = os.path.join(basedir, path)
   if not os.path.abspath(path).startswith(_ROOT_DIR) or not os.path.exists(path):

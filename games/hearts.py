@@ -12,16 +12,27 @@ from trick_taking_game import TrickTakingGame
 class Hearts(TrickTakingGame):
   """The Hearts card game."""
 
-  def __init__(self, players, deck=None, manager=None):
+  def __init__(self, players, deck=None):
     if len(players) not in (3, 4, 5):
       raise ValueError("Hearts is a 3 to 5 player game, got {} players".format(len(players)))
-    super(Hearts, self).__init__(players, deck or "standard", manager)
+    super(Hearts, self).__init__(players, deck or "standard")
     if self.num_players == 3:
       self.deck.FindAndRemoveCard(name="2D")
     elif self.num_players == 5:
       self.deck.FindAndRemoveCard(name="2C")
       self.deck.FindAndRemoveCard(name="2D")
     self.ResetGame()
+
+  @classmethod
+  def GetCardValue(cls, card):
+    """Return the value of a card as prescribed by this game."""
+    values = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 1]
+    return values.index(card.number)
+
+  @classmethod
+  def SortCards(cls, cards):
+    """Sort a list of cards by value. Returns an iterator."""
+    return iter(sorted(cards, key=cls.GetCardValue))
 
   def PlayGame(self):
     """Play the game."""
@@ -61,7 +72,7 @@ class Hearts(TrickTakingGame):
   def _FindFirstPlayer(self):
     """Find the first player of a round. The first player has the two of clubs."""
     start = "3C" if self.num_players == 5 else "2C"
-    return next(i for (i, p) in enumerate(self.players) if any(c.name == start for c in p.hand))
+    return next(i for i, p in enumerate(self.players) if any(c.name == start for c in p.hand))
 
   def _GetPlayAndCheck(self, player):
     card = None
@@ -119,8 +130,9 @@ class Hearts(TrickTakingGame):
 
   def _GetTrickWinner(self):
     """Determine who won the most recent trick."""
-    lead_suit = self.cards_played[0].suit
-    return max((c.number, i) for (i, c) in enumerate(self.cards_played) if c.suit == lead_suit)[-1]
+    leader = self.cards_played[0].suit
+    high_card = next(self.SortCards(c for c in self.cards_played if c.suit == leader))
+    return self.cards_played.index(high_card)
 
   def _GetValidMoves(self, player):
     """Return a list of valid moves for the given player based on the current state."""

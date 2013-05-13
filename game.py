@@ -7,20 +7,18 @@
 __author__ = "ding@caltech.edu (David Ding)"
 
 import collections
-import threading
 import uuid
 from deck import Deck
 from player import Player
-from pylib import thread_tools
 from pylib import utils
 
-NUM_THREADS = 8
+_DECK_DIR = "decks"
 
 
 class Game(utils.MessageMixin):
   """A card game."""
 
-  def __init__(self, players, deck, manager=None):
+  def __init__(self, players, deck):
     """Constructor.
 
     Args:
@@ -32,17 +30,12 @@ class Game(utils.MessageMixin):
     # Container for state variables.
     self._state = utils.AttributeDict()
 
-    # Thread tools.
-    self._manager = thread_tools.EventManager(NUM_THREADS) if manager is None else manager
-    self._lock = threading.RLock()
-    self._condition = threading.Condition(self._lock)
-
     # A unique ID for the game.
     self._id = uuid.uuid1()
 
     # The deck of cards to use.
     try:
-      self._deck = Deck.fromjson(utils.CheckPath(deck + ".json", utils.DECK_BASE))
+      self._deck = Deck.fromjson(utils.CheckPath(deck + ".json", _DECK_DIR))
     except IOError:
       raise ValueError("Invalid deck name '{}', deck not found".format(deck))
 
@@ -110,7 +103,7 @@ class Game(utils.MessageMixin):
 
   @property
   def id(self):
-    return self._id
+    return str(self._id)
 
   @property
   def num_players(self):

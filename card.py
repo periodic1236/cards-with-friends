@@ -12,6 +12,8 @@ import uuid
 from PIL import Image
 from pylib import utils
 
+_CARD_IMAGE_DIR = "static/card_images"
+
 
 class Card(object):
   """A playing card."""
@@ -20,7 +22,7 @@ class Card(object):
     self._id = uuid.uuid4()
     self._name = utils.Sanitize(name)
     self._long_name = long_name
-    self._image_loc = utils.CheckPath(image_loc, utils.CARD_IMG_BASE)
+    self._image_loc = utils.CheckPath(image_loc, _CARD_IMAGE_DIR)
     if not props:
       raise ValueError("Card properties cannot be empty")
     self._props = collections.OrderedDict(sorted(props.items()))
@@ -62,6 +64,10 @@ class Card(object):
   @faceup.setter
   def faceup(self, value):
     self._faceup = bool(value)
+
+  @property
+  def id(self):
+    return str(self._id)
 
   @property
   def image_loc(self):

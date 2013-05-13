@@ -12,11 +12,22 @@ from trick_taking_game import TrickTakingGame
 class Spades(TrickTakingGame):
   """The Spades card game."""
 
-  def __init__(self, players, deck=None, manager=None):
+  def __init__(self, players, deck=None):
     if len(players) != 4:
       raise ValueError("Spades is a 4-player game, got {} players".format(len(players)))
-    super(Spades, self).__init__(players, deck or "standard", manager)
+    super(Spades, self).__init__(players, deck or "standard")
     self.ResetGame()
+
+  @classmethod
+  def GetCardValue(cls, card):
+    """Return the value of a card as prescribed by this game."""
+    values = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 1]
+    return values.index(card.number) + (13 if card.suit == "spades" else 0)
+
+  @classmethod
+  def SortCards(cls, cards):
+    """Sort a list of cards by value. Returns an iterator."""
+    return iter(sorted(cards, key=cls.GetCardValue))
 
   def PlayGame(self):
     """Play the game."""
@@ -62,11 +73,9 @@ class Spades(TrickTakingGame):
 
   def _GetTrickWinner(self):
     """Determine who won the most recent trick."""
-    spades = [(c.number, i) for (i, c) in enumerate(self.cards_played) if c.suit == "spades"]
-    if spades:
-      return max(spades)[-1]
-    lead_suit = self.cards_played[0].suit
-    return max((c.number, i) for (i, c) in enumerate(self.cards_played) if c.suit == lead_suit)[-1]
+    leader = self.cards_played[0].suit
+    high_card = next(self.SortCards(c for c in self.cards_played if c.suit in ("spades", leader)))
+    return self.cards_played.index(high_card)
 
   def _GetValidBid(self, player):
     """Get a valid bid from the given player."""

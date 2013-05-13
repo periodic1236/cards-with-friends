@@ -3,7 +3,7 @@ from gevent import sleep, monkey; monkey.patch_all()
 from socketio import socketio_manage
 from socketio.namespace import BaseNamespace
 from socketio.mixins import RoomsMixin, BroadcastMixin
-import games.highest_card
+
 
 def GetBidFromPlayer(player, valid_bids):
   # TODO(brazon)
@@ -104,7 +104,7 @@ class CardNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
 
     # if all players have joined, start game
     #if CardNamespace.num_players == CardNamespace.total_players:
-    #  game = games.highest_card.HighestCard(CardNamespace.players.keys())
+    #  game = HighestCard(CardNamespace.players.keys())
     #  game.PlayGame()
 
   # runs when client refreshes the page, keeps sockets up to date

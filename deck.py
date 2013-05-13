@@ -14,7 +14,7 @@ from PIL import Image
 from card import Card
 from pylib import utils
 
-_CARD_IMAGE_BASE = "card_images"
+_CARD_IMAGE_DIR = "static/card_images"
 
 
 class Deck(collections.Iterator):
@@ -30,7 +30,7 @@ class Deck(collections.Iterator):
     """
     self._name = utils.Sanitize(name)
     self._long_name = long_name
-    self._back_image_loc = utils.CheckPath(back_image_loc, utils.CARD_IMG_BASE)
+    self._back_image_loc = utils.CheckPath(back_image_loc, _CARD_IMAGE_DIR)
     self._cards = set()
     self._deck = []
 
@@ -77,9 +77,9 @@ class Deck(collections.Iterator):
   def Draw(self, num_cards=1):
     """Remove and return the top num_card cards (default 1) from the deck as a list."""
     if num_cards < 1:
-      raise ValueError("num_cards must be positive, got %d" % num_cards)
+      raise ValueError("num_cards must be positive, got {}".format(num_cards))
     if len(self) < num_cards:
-      raise IndexError("Tried to draw %d cards, but deck has %d." % (num_cards, self.num_cards))
+      raise IndexError("Tried to draw {} cards, but deck has {}.".format(num_cards, self.num_cards))
     return [next(self) for _ in xrange(num_cards)]
 
   def FindAndRemoveCard(self, **props):

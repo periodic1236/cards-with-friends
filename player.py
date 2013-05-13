@@ -84,7 +84,7 @@ class Player(utils.MessageMixin):
 
   @property
   def id(self):
-    return self._id
+    return str(self._id)
 
   @property
   def money(self):
