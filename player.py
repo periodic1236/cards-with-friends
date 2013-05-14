@@ -42,10 +42,10 @@ class Player(utils.MessageMixin):
 
   def ClearTaken(self):
     self.taken.clear()
-    self.Notify(self, "clear_taken")
+    self.Notify(self.name, "clear_taken")
 
   def GetBid(self, error_msg, valid_bids, callback=None):
-    bid = self.Request(self, "get_bid", valid_bids=valid_bids)
+    bid = self.Request(self.name, "get_bid", valid_bids=valid_bids)
     if callback is None:
       return bid
     callback(bid)
@@ -56,7 +56,7 @@ class Player(utils.MessageMixin):
     # TODO(brazon): Figure out what to do about multi-card plays...
     if num_cards > 1:
       raise NotImplementedError("Multi-card moves break things")
-    cards = self.Request(self, "get_play", valid_plays=valid_plays, num_cards=num_cards)
+    cards = self.Request(self.name, "get_play", valid_plays=valid_plays, num_cards=num_cards)
     self.hand.Remove(*cards)
     if callback is None:
       return cards
@@ -75,7 +75,7 @@ class Player(utils.MessageMixin):
       # TODO(mqian): Raise a more meaningful error.
       raise TypeError
     self.taken |= temp
-    self.Notify(self, "take_trick", cards=temp)
+    self.Notify(self.name, "take_trick", cards=temp)
     return True
 
   @property
@@ -93,7 +93,7 @@ class Player(utils.MessageMixin):
   @money.setter
   def money(self, value):
     self._money = value
-    self.Notify(self, "update_money", money=value)
+    self.Notify(self.name, "update_money", money=value)
 
   @property
   def name(self):
@@ -106,7 +106,7 @@ class Player(utils.MessageMixin):
   @score.setter
   def score(self, value):
     self._score = value
-    self.Notify(self, "update_score", score=value)
+    self.Notify(self.name, "update_score", score=value)
 
   @property
   def taken(self):
@@ -144,13 +144,13 @@ class _Hand(utils.MessageMixin):
       # TODO(mqian): Raise a more meaningful error.
       raise TypeError
     self._cards |= temp
-    self.Notify(self.player, "add_card", cards=temp)
+    self.Notify(self.player.name, "add_card", cards=temp)
     return True
 
   def Clear(self):
     """Remove all cards from the player's hand."""
     self._cards.clear()
-    self.Notify(self.player, "clear_hand")
+    self.Notify(self.player.name, "clear_hand")
 
   def Remove(self, *cards):
     """Remove one or more cards from the player's hand."""
@@ -159,7 +159,7 @@ class _Hand(utils.MessageMixin):
       # TODO(mqian): Raise a more meaningful error.
       raise ValueError
     self._cards -= temp
-    self.Notify(self.player, "remove_card", cards=temp)
+    self.Notify(self.player.name, "remove_card", cards=temp)
     return True
 
   @property
