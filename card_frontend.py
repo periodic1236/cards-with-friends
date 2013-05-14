@@ -40,13 +40,14 @@ def PlayerAddToHand(player, cards):
   pass
 
 def PlayerClearHand(player):
-  # TODO(brazon)
   player_socket = CardNamespace.players[player]
   player_socket.clear_hand()
   pass
 
 def PlayerClearTaken(player):
-  # TODO(brazon) Ask Mike what this requires from frontend
+  # TODO(theresa) Add trick count field to frontend
+  player_socket = CardNamespace.players[player]
+  play_socket.clear_taken()
   pass
 
 def PlayerDisplayMessage(player, message):
@@ -61,8 +62,8 @@ def PlayerRemoveFromHand(player, cards):
   pass
 
 def PlayerTakeTrick(player, cards):
-  # TODO(brazon) Ask Mike what this requires from frontend
   # cards is a list of Card objects
+  # Note that cards is not used...
   player_socket = CardNamespace.players[player]
   player_socket.take_trick()
   pass
@@ -92,7 +93,6 @@ class CardNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
   # runs when client refreshes the page, keeps sockets up to date
   def on_reconnect(self, nickname, password):
     # add myself to list of players
-    # TODO This seems really insecure...
     if CardNamespace.passwords[nickname] == password:
       CardNamespace.players[nickname] = self
     else:
@@ -107,21 +107,26 @@ class CardNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
 
   # add card to hand
   def add_card(self, card, image):
-    self.emit("add_to_hand", self.player_num, card, image)
+    self.emit("add_to_hand", card, image)
 
   # start my turn
   def get_card(self, cards_allowed):
-    self.emit("get_card", self.player_num, cards_allowed)
+    self.emit("get_card", cards_allowed)
 
   def clear_hand(self):
-    self.emit("clear_hand", self.player_num)
+    self.emit("clear_hand")
 
   def remove_card(self, card):
-    self.emit("remove_from_hand", self.player_num, card)
+    self.emit("remove_from_hand", card)
 
   def take_trick(self):
-    self.emit("clear_trick")
+    for player in self.my_room.players:
+      player.emit("clear_trick_area")
+      player.emit("increment_tricks_won", self.nickname)
 
+  def clear_taken(self):
+    for player in self.my_room.players:
+      player.emit("reset_tricks_won", self.nickname)
   # -- Events for room list --
 
   # client requested room list
