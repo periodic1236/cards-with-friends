@@ -33,3 +33,10 @@
   padding:10px;
   overflow:scroll-y;
 }
+
+#messageBox {
+  height:120px;
+  width:120px;
+  border:1px solid #ccc;
+  overflow:auto;
+}
