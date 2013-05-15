@@ -78,3 +78,9 @@ socket.on('update_room_list', function(host_list, players_list, capacity_list, m
         document.getElementById('new_room_button').style.visibility="visible";
     }
 });
+
+// called when the game starts
+// redirect everyone in the room to the game table page
+socket.on('go_to_game_table', function() {
+    window.location = '/game_table';
+});

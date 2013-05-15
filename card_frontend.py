@@ -47,7 +47,7 @@ def PlayerClearHand(player):
 def PlayerClearTaken(player):
   # TODO(theresa) Add trick count field to frontend
   player_socket = CardNamespace.players[player]
-  play_socket.clear_taken()
+  player_socket.clear_taken()
   pass
 
 def PlayerDisplayMessage(player, message):
@@ -207,22 +207,24 @@ class CardNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
   # Start game
   # called by host of game once enough players have joined
   def on_start_game(self):
-    # TODO
-    print "Game started!"
+    if not self.isHost:
+      print "You are not a host!"
+    elif self.my_room is None:
+      print "You have no game to start!"
+    else:
+      # start game
+      print "Game starting!!"
+      self.my_room.StartGame();
+
 
 # Room class
 class Room(object):
 
-  # state
-  host = None
-  players = []  # list of players (CardNamespace objects) currently joined
-  capacity = 0  # total number of players
-  # should also eventually know which game is being played in this room
-
   def __init__(self, host, capacity):
-    self.host = host
+    self.host = host  # list of players (CardNamespace objects) currently joined
     self.players = [host]
-    self.capacity = capacity
+    self.capacity = capacity  # total number of players
+    self.game = None;
 
   # delete this room and remove all players
   def __del__(self):
@@ -252,3 +254,9 @@ class Room(object):
     else:
       self.players.remove(p)
       p.my_room = None
+
+  def StartGame(self):
+    from games.spades import Spades
+    self.game = Spades([p.nickname for p in self.players])
+    for p in self.players:
+        p.emit('go_to_game_table')
