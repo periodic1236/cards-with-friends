@@ -27,13 +27,14 @@ def GetCardFromPlayer(player, valid_plays, num_cards=1):
   player_socket = CardNamespace.players[player]
   player_socket.card = None
   valid_plays_list = [x.id for x in valid_plays]
-  player_socket.get_card(valid_plays)
+  player_socket.get_card(valid_plays_list)
   while player_socket.card is None:
     sleep(1)
   return [player_socket.card]
 
 def PlayerAddToHand(player, cards):
   # cards is a list of Card objects
+  print "Frontend Add Card 1 " + player
   player_socket = CardNamespace.players[player]
   for card in cards:
     player_socket.add_card(card.id, card.image_loc)
@@ -158,7 +159,7 @@ class CardNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
   # create a room
   def on_create_room(self):
     if self.my_room is None:
-      capacity = 4
+      capacity = 2
       self.my_room = Room(self, capacity)
       self.isHost = 1;
       CardNamespace.rooms.append(self.my_room)
@@ -256,7 +257,14 @@ class Room(object):
       p.my_room = None
 
   def StartGame(self):
-    from games.spades import Spades
-    self.game = Spades([p.nickname for p in self.players])
+    from games.highest_card import HighestCard
+    print "Game 1"
+    self.game = HighestCard([p.nickname for p in self.players])
     for p in self.players:
         p.emit('go_to_game_table')
+    print "Game 2"
+    #sleep(1) #This line somehow seems to yield forever, but without it I
+    # don't think we can update the sockets in time to get the addcard events.
+    print "Game 3"
+    self.game.PlayGame()
+    print "Game 4"

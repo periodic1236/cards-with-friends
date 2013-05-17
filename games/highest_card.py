@@ -15,7 +15,7 @@ class HighestCard(TrickTakingGame):
   def __init__(self, players, deck=None, manager=None):
     if len(players) != 2:
       raise ValueError("Highest Card is a 2-player game, got {} players".format(len(players)))
-    super(HighestCard, self).__init__(players, deck or "standard", manager)
+    super(HighestCard, self).__init__(players, deck or "standard")
     self.ResetGame()
 
   def PlayGame(self):

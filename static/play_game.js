@@ -60,7 +60,7 @@ socket.on('play_card', function (username, data) {
 //TODO Should this call a separate function like clear_hand?
 socket.on('clear_trick_area', function() {
   $('#trick').empty();
-}
+});
 
 socket.on('increment_tricks_won', incrementTricksWon);
 
