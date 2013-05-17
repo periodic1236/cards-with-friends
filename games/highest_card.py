@@ -12,7 +12,7 @@ from trick_taking_game import TrickTakingGame
 class HighestCard(TrickTakingGame):
   """The Highest Card card game."""
 
-  def __init__(self, players, deck=None, manager=None):
+  def __init__(self, players, deck=None):
     if len(players) != 2:
       raise ValueError("Highest Card is a 2-player game, got {} players".format(len(players)))
     super(HighestCard, self).__init__(players, deck or "standard")
