@@ -2,6 +2,10 @@ var cardImagePath = "static/card_images/";
 var allowedCards = [];
 var socket = io.connect();
 
+function readyGame() {
+  socket.emit('ready_game');
+}
+
 function returnCard(e, card) {
   //TODO check that it is the players turn so that we can move allowedCards
   //to a function argument.
