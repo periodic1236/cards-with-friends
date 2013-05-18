@@ -58,8 +58,9 @@ def game_table():
 # this runs as soon as a client is started
 @app.route("/socket.io/<path:path>")
 def run_socketio(path):
-    # second argument maps urls to namespace classes
-    socketio_manage(request.environ, {'': CardNamespace})
+  # second argument maps urls to namespace classes
+  socketio_manage(request.environ, {'': CardNamespace}) #TODO is something supposed to be here?
+  return render_template('blank.html')
 
 # main method
 # runs when server starts
