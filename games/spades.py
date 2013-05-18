@@ -68,7 +68,7 @@ class Spades(TrickTakingGame):
     """Get bids from each player."""
     for i in xrange(self.num_players):
       # Proceed clockwise starting from the dealer's left.
-      bidder = (self.dealer + 1) + i
+      bidder = ((self.dealer + 1) + i) % self.num_players
       self.player_bids[bidder] = self._GetValidBid(self.GetPlayerByIndex(bidder))
 
   def _GetTrickWinner(self):

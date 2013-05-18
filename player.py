@@ -144,7 +144,9 @@ class _Hand(utils.MessageMixin):
       # TODO(mqian): Raise a more meaningful error.
       raise TypeError
     self._cards |= temp
+    print "Backend: Add Card 1"
     self.Notify(self.player.name, "add_card", cards=temp)
+    print "Backend: Add Card 2"
     return True
 
   def Clear(self):

@@ -47,7 +47,6 @@ def documentation():
 @app.route('/room_list', methods=['GET', 'POST'])
 @login_required
 def room_list():
-  print 'new room'
   return render_template('room_list.html')
 
 
