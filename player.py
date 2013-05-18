@@ -59,6 +59,7 @@ class Player(utils.MessageMixin):
     print "About to request card"
     cards = self.Request(self.name, "get_play", valid_plays=valid_plays, num_cards=num_cards)
     self.hand.Remove(*cards)
+    self.Notify(self.name, "played_card", cards=cards)
     result = cards if num_cards > 1 else cards[0]
     if callback is None:
       return result

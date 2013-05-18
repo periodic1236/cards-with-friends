@@ -16,6 +16,11 @@ def HandleLogin(nickname):
 def SetPassword(nickname, password):
   CardNamespace.passwords[nickname] = password
 
+def AddToTrickArea(player, cards):
+  # cards is a list of Card objects
+  # TODO(brazon)
+  pass
+
 def GetBidFromPlayer(player, valid_bids):
   # TODO(brazon): Figure out frontend first
   return None
@@ -39,19 +44,17 @@ def PlayerAddToHand(player, cards):
   # cards is a list of Card objects
   player_socket = CardNamespace.players[player]
   for card in cards:
+    print "Adding card: (%s, %s)" % (player, card)
     player_socket.add_card(card.id, card.image_loc)
-  pass
 
 def PlayerClearHand(player):
   player_socket = CardNamespace.players[player]
   player_socket.clear_hand()
-  pass
 
 def PlayerClearTaken(player):
   # TODO(theresa) Add trick count field to frontend
   player_socket = CardNamespace.players[player]
   player_socket.clear_taken()
-  pass
 
 def PlayerDisplayMessage(player, message):
   # TODO(brazon) Figure out frontend
@@ -61,15 +64,14 @@ def PlayerRemoveFromHand(player, cards):
   # cards is a list of Card objects
   player_socket = CardNamespace.players[player]
   for card in cards:
+    print "Removing card: (%s, %s)" % (player, card)
     player_socket.remove_card(card.id)
-  pass
 
 def PlayerTakeTrick(player, cards):
   # cards is a list of Card objects
   # Note that cards is not used...
   player_socket = CardNamespace.players[player]
   player_socket.take_trick()
-  pass
 
 def PlayerUpdateMoney(player, money):
   # TODO(brazon) Figure out frontend first
@@ -280,7 +282,7 @@ class Room(object):
         CardNamespace.players[p].emit('go_to_game_table')
     while False in [CardNamespace.players[p].ready for p in self.players]:
       print "Game 3", [CardNamespace.players[p].ready for p in self.players]
-      sleep(.1)
+      sleep(0.05)
     Greenlet.spawn(self.game.PlayGame)
     print "Game 4"
 

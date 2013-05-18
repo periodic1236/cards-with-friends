@@ -29,11 +29,12 @@ function addCard(card, image) {
 
 function removeCard(card) {
   var hand = $('#hand');
-  hand.removeChild($('#' + card));
+  hand.removeChild($('#' + card));  //TODO this is broken!!!!!!!!!
 }
 
 function getCard(allowed_cards) {
   allowedCards = allowed_cards;
+  //TODO why is this not doing anything?
 }
 
 function clearHand() {
