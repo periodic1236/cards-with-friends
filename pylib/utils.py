@@ -43,6 +43,7 @@ class MessageMixin(object):
       "clear_hand": card_frontend.PlayerClearHand,
       "clear_taken": card_frontend.PlayerClearTaken,
       "display_message": card_frontend.PlayerDisplayMessage,
+      "played_card": card_frontend.AddToTrickArea,
       "remove_card": card_frontend.PlayerRemoveFromHand,
       "take_trick": card_frontend.PlayerTakeTrick,
       "update_money": card_frontend.PlayerUpdateMoney,

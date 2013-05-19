@@ -1,4 +1,4 @@
-from gevent import sleep, monkey; monkey.patch_all()
+from gevent import Greenlet, monkey, sleep; monkey.patch_all()
 
 from socketio import socketio_manage
 from socketio.namespace import BaseNamespace
@@ -16,6 +16,11 @@ def HandleLogin(nickname):
 def SetPassword(nickname, password):
   CardNamespace.passwords[nickname] = password
 
+def AddToTrickArea(player, cards):
+  # cards is a list of Card objects
+  # TODO(brazon)
+  pass
+
 def GetBidFromPlayer(player, valid_bids):
   # TODO(brazon): Figure out frontend first
   return None
@@ -26,30 +31,30 @@ def GetCardFromPlayer(player, valid_plays, num_cards=1):
     raise NotImplementedError('Multiple card plays are not supported yet.')
   player_socket = CardNamespace.players[player]
   player_socket.card = None
-  valid_plays_list = [x.id for x in valid_plays]
+  valid_plays_map = dict(((x.id, x) for x in valid_plays))
+  valid_plays_list = valid_plays_map.keys()
+  print "here are the valid plays for player %s:" % player, valid_plays_map.values()
   player_socket.get_card(valid_plays_list)
   while player_socket.card is None:
+    print "waiting for player %s" % player
     sleep(1)
-  return [player_socket.card]
+  return [valid_plays_map[player_socket.card]]
 
 def PlayerAddToHand(player, cards):
   # cards is a list of Card objects
-  print "Frontend Add Card 1 " + player
   player_socket = CardNamespace.players[player]
   for card in cards:
+    print "Adding card: (%s, %s)" % (player, card)
     player_socket.add_card(card.id, card.image_loc)
-  pass
 
 def PlayerClearHand(player):
   player_socket = CardNamespace.players[player]
   player_socket.clear_hand()
-  pass
 
 def PlayerClearTaken(player):
   # TODO(theresa) Add trick count field to frontend
   player_socket = CardNamespace.players[player]
   player_socket.clear_taken()
-  pass
 
 def PlayerDisplayMessage(player, message):
   # TODO(brazon) Figure out frontend
@@ -59,15 +64,14 @@ def PlayerRemoveFromHand(player, cards):
   # cards is a list of Card objects
   player_socket = CardNamespace.players[player]
   for card in cards:
+    print "Removing card: (%s, %s)" % (player, card)
     player_socket.remove_card(card.id)
-  pass
 
 def PlayerTakeTrick(player, cards):
   # cards is a list of Card objects
   # Note that cards is not used...
   player_socket = CardNamespace.players[player]
   player_socket.take_trick()
-  pass
 
 def PlayerUpdateMoney(player, money):
   # TODO(brazon) Figure out frontend first
@@ -90,17 +94,21 @@ class CardNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
   my_room = None  # room that this player has joined
   isHost = 0  # 0 or 1 indicating whether this player is the host of my_room
   nickname = ""
+  ready = False
 
   # runs when client refreshes the page, keeps sockets up to date
   def on_reconnect(self, nickname, password):
     # add myself to list of players
     if CardNamespace.passwords[nickname] == password:
+      if CardNamespace.players[nickname] != None:
+        self.my_room = CardNamespace.players[nickname].my_room
+        self.isHost = CardNamespace.players[nickname].isHost
+        self.ready = CardNamespace.players[nickname].ready
+
+      self.nickname = nickname
       CardNamespace.players[nickname] = self
     else:
       raise RuntimeError('Incorrect Password')
-
-    # this only needs to happen once but since on_login is not used anymore I decided to put it here
-    self.nickname = nickname
 
   # runs when client plays a card
   def on_card(self, card):
@@ -121,12 +129,14 @@ class CardNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
     self.emit("remove_from_hand", card)
 
   def take_trick(self):
-    for player in self.my_room.players:
+    for p in self.my_room.players:
+      player = CardNamespace.players[p]
       player.emit("clear_trick_area")
       player.emit("increment_tricks_won", self.nickname)
 
   def clear_taken(self):
-    for player in self.my_room.players:
+    for p in self.my_room.players:
+      player = CardNamespace.players[p]
       player.emit("reset_tricks_won", self.nickname)
   # -- Events for room list --
 
@@ -143,7 +153,7 @@ class CardNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
   @staticmethod
   def update_all_room_lists():
     # Compile room list data
-    host_list = [room.host.nickname for room in CardNamespace.rooms]
+    host_list = [room.host for room in CardNamespace.rooms]
     players_list = [room.num_players for room in CardNamespace.rooms]
     capacity_list = [room.capacity for room in CardNamespace.rooms]
     # TODO: only send to players who are viewing list? (as opposed to playing game)
@@ -213,24 +223,31 @@ class CardNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
     elif self.my_room is None:
       print "You have no game to start!"
     else:
-      # start game
-      print "Game starting!!"
-      self.my_room.StartGame();
+      # go to game table game
+      print "Game Starting!!"
+      self.my_room.StartGame()
 
+  def on_ready_game(self):
+    if self.my_room is None:
+      print "You have no game to start!"
+    else:
+      # tell game you are ready
+      print self.nickname, "is ready to start"
+      self.ready = True
 
 # Room class
 class Room(object):
 
   def __init__(self, host, capacity):
-    self.host = host  # list of players (CardNamespace objects) currently joined
-    self.players = [host]
+    self.host = host.nickname  # list of players (nicknames) currently joined
+    self.players = [host.nickname]
     self.capacity = capacity  # total number of players
     self.game = None;
 
   # delete this room and remove all players
   def __del__(self):
     for p in self.players:
-      p.my_room = None
+      CardNamespace.players[p].my_room = None
 
   @property
   def num_players(self):
@@ -241,30 +258,31 @@ class Room(object):
     return self.num_players >= self.capacity
 
   def AddPlayer(self, p):
-    if p in self.players:
+    if p.nickname in self.players:
       print "Cannot add the same player to a room twice!"
     elif self.full:
       print "Cannot add player because room is full!"
     else:
-      self.players.append(p)
+      self.players.append(p.nickname)
       p.my_room = self
 
   def RemovePlayer(self, p):
-    if not p in self.players:
+    if not p.nickname in self.players:
       print "Cannot remove player because player is not in room!"
     else:
-      self.players.remove(p)
+      self.players.remove(p.nickname)
       p.my_room = None
 
   def StartGame(self):
     from games.highest_card import HighestCard
     print "Game 1"
-    self.game = HighestCard([p.nickname for p in self.players])
-    for p in self.players:
-        p.emit('go_to_game_table')
+    self.game = HighestCard([p for p in self.players])
     print "Game 2"
-    #sleep(1) #This line somehow seems to yield forever, but without it I
-    # don't think we can update the sockets in time to get the addcard events.
-    print "Game 3"
-    self.game.PlayGame()
+    for p in self.players:
+        CardNamespace.players[p].emit('go_to_game_table')
+    while False in [CardNamespace.players[p].ready for p in self.players]:
+      print "Game 3", [CardNamespace.players[p].ready for p in self.players]
+      sleep(0.05)
+    Greenlet.spawn(self.game.PlayGame)
     print "Game 4"
+

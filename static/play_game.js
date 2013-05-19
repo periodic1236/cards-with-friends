@@ -21,6 +21,10 @@ function updateBids(validBids){
 	}
 }
 
+function readyGame() {
+  socket.emit('ready_game');
+}
+
 function returnCard(e, card) {
   //TODO check that it is the players turn so that we can move allowedCards
   //to a function argument.
@@ -44,11 +48,12 @@ function addCard(card, image) {
 
 function removeCard(card) {
   var hand = $('#hand');
-  hand.removeChild($('#' + card));
+  hand.removeChild($('#' + card));  //TODO this is broken!!!!!!!!!
 }
 
 function getCard(allowed_cards) {
   allowedCards = allowed_cards;
+  //TODO why is this not doing anything?
 }
 
 function clearHand() {

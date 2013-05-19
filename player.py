@@ -56,11 +56,14 @@ class Player(utils.MessageMixin):
     # TODO(brazon): Figure out what to do about multi-card plays...
     if num_cards > 1:
       raise NotImplementedError("Multi-card moves break things")
+    print "About to request card"
     cards = self.Request(self.name, "get_play", valid_plays=valid_plays, num_cards=num_cards)
     self.hand.Remove(*cards)
+    self.Notify(self.name, "played_card", cards=cards)
+    result = cards if num_cards > 1 else cards[0]
     if callback is None:
-      return cards
-    callback(cards)
+      return result
+    callback(result)
 
   def MaybeGetPlay(self, num_cards=1, callback=None):
     # TODO(brazon)
@@ -112,6 +115,10 @@ class Player(utils.MessageMixin):
   def taken(self):
     return self._taken
 
+  @taken.setter
+  def taken(self, value):
+    self._taken = value
+
 
 class _Hand(utils.MessageMixin):
   """A player's hand."""
@@ -144,9 +151,7 @@ class _Hand(utils.MessageMixin):
       # TODO(mqian): Raise a more meaningful error.
       raise TypeError
     self._cards |= temp
-    print "Backend: Add Card 1"
     self.Notify(self.player.name, "add_card", cards=temp)
-    print "Backend: Add Card 2"
     return True
 
   def Clear(self):
