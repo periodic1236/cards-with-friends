@@ -2,6 +2,25 @@ var cardImagePath = "static/card_images/";
 var allowedCards = [];
 var socket = io.connect();
 
+// Given a list of valid bids, will update the drop down list
+// of bids that a player can make
+function updateBids(validBids){
+	var theBids = document.getElementById("bids");
+	
+	// first remove all previous valid bids
+	while (theBids.hasChildNodes()){
+		theBids.removeChild(theBids.lastChild);
+	}
+	
+	// update combo box of bids with valid bids
+	for (i = 0; i < validBids.length; i++){
+		aBid = document.createElement('option');
+		aBid.value = validBids[i];
+		aBid.innerHTML = validBids[i];
+		theBids.appendChild(aBid);
+	}
+}
+
 function returnCard(e, card) {
   //TODO check that it is the players turn so that we can move allowedCards
   //to a function argument.
