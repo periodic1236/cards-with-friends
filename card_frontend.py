@@ -1,3 +1,4 @@
+import threading
 from gevent import Greenlet, monkey, sleep; monkey.patch_all()
 
 from socketio import socketio_manage
@@ -95,6 +96,8 @@ class CardNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
   isHost = 0  # 0 or 1 indicating whether this player is the host of my_room
   nickname = ""
   ready = False
+  lock = threading.RLock()
+  event = threading.Condition(lock)
 
   # runs when client refreshes the page, keeps sockets up to date
   def on_reconnect(self, nickname, password):
@@ -239,6 +242,8 @@ class CardNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
       # tell game you are ready
       print self.nickname, "is ready to start"
       self.ready = True
+      with CardNamespace.lock:
+        CardNamespace.event.notify_all()
 
 # Room class
 class Room(object):
@@ -280,14 +285,17 @@ class Room(object):
 
   def StartGame(self):
     from games.highest_card import HighestCard
+    #from games.hearts import Hearts
     print "Game 1"
     self.game = HighestCard([p for p in self.players])
+    #self.game = Hearts([p for p in self.players])
     print "Game 2"
     for p in self.players:
-        CardNamespace.players[p].emit('go_to_game_table')
+      CardNamespace.players[p].emit('go_to_game_table')
     while False in [CardNamespace.players[p].ready for p in self.players]:
-      print "Game 3", [CardNamespace.players[p].ready for p in self.players]
-      sleep(0.05)
+      with CardNamespace.lock:
+        CardNamespace.event.wait()
+    print "Game 3", [CardNamespace.players[p].ready for p in self.players]
     Greenlet.spawn(self.game.PlayGame)
     print "Game 4"
 
