@@ -32,7 +32,7 @@ class Hearts(TrickTakingGame):
   @classmethod
   def SortCards(cls, cards):
     """Sort a list of cards by value. Returns an iterator."""
-    return iter(sorted(cards, key=cls.GetCardValue))
+    return iter(sorted(cards, key=cls.GetCardValue, reverse=True))
 
   def PlayGame(self):
     """Play the game."""
@@ -41,7 +41,7 @@ class Hearts(TrickTakingGame):
       # Reset hands, shuffle, and deal cards.
       self._NewRound()
       # Pass cards left, right, across, or not at all based on the round number.
-      self._Trade()
+      #self._Trade()
       # Identify first player of the round.
       self.lead = self._FindFirstPlayer()
       # Play 13 tricks.
@@ -138,6 +138,12 @@ class Hearts(TrickTakingGame):
     """Return a list of valid moves for the given player based on the current state."""
     # If the play leads the trick.
     if not self.cards_played:
+      # If this is also the first trick, only the two of clubs may be played.
+      if self.trick_num == 1:
+        two_clubs = utils.FindCard(player.hand, name="2C")
+        if not two_clubs:
+          raise ValueError("Logic error! Player was expected to have the two of clubs.")
+        return ("Must lead with two of clubs", two_clubs)
       # If hearts is broken, any play from the hand is valid.
       if self.hearts_broken:
         return (None, list(player.hand))
@@ -198,6 +204,7 @@ class Hearts(TrickTakingGame):
 
   def _Trade(self):
     """Trade cards between players. No trading occurs every 4th round."""
+    # TODO(ding): Add support for non-4-player games.
     if self.round_num % 4 == 1:
       self._PassCards((self.players[0], self.players[1], 3),
                       (self.players[1], self.players[2], 3),
