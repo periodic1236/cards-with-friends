@@ -4,7 +4,6 @@ from socketio import socketio_manage
 from socketio.namespace import BaseNamespace
 from socketio.mixins import RoomsMixin, BroadcastMixin
 from flask import session
-#TODO Figure out circular imports
 
 def HandleLogin(nickname):
   if nickname in CardNamespace.players:
@@ -18,8 +17,9 @@ def SetPassword(nickname, password):
 
 def AddToTrickArea(player, cards):
   # cards is a list of Card objects
-  # TODO(brazon)
-  pass
+  player_socket = CardNamespace.players[player]
+  for card in cards:
+    player_socket.add_to_trick_area(card.id, card.image_loc)
 
 def GetBidFromPlayer(player, valid_bids):
   # TODO(brazon): Figure out frontend first
@@ -127,6 +127,11 @@ class CardNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
 
   def remove_card(self, card):
     self.emit("remove_from_hand", card)
+
+  def add_to_trick_area(self, nickname, card):
+    for p in self.my_room.players:
+      player = CardNamespace.players[p]
+      player.emit("add_to_trick_area", nickname, card)
 
   def take_trick(self):
     for p in self.my_room.players:

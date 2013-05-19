@@ -29,7 +29,6 @@ function returnCard(e, card) {
   //TODO check that it is the players turn so that we can move allowedCards
   //to a function argument.
   if ($.inArray(card, allowedCards) != -1) {
-    //document.getElementById('hand').removeChild(e.target);  // remove card from screen
     socket.emit('card', card);
     allowedCards = [];
   }
@@ -46,14 +45,22 @@ function addCard(card, image) {
   hand.append(newCard);
 }
 
+function addToTrickArea(card, image) {
+  var trickArea = $('#trick');
+	var newCard = document.createElement("img");
+	newCard.setAttribute("class", 'card');
+  newCard.setAttribute("id", card);
+	newCard.setAttribute("src", image);
+  trickArea.append(newCard);
+}
+
 function removeCard(card) {
   var hand = $('#hand');
-  hand.removeChild($('#' + card));  //TODO this is broken!!!!!!!!!
+  $('#' + card).remove();
 }
 
 function getCard(allowed_cards) {
   allowedCards = allowed_cards;
-  //TODO why is this not doing anything?
 }
 
 function clearHand() {
@@ -77,9 +84,7 @@ socket.on('get_card', getCard);
 socket.on('clear_hand', clearHand);
 
 //Todo rename and clean up this function
-socket.on('play_card', function (username, data) {
-  $('#trick').append('<b>'+username + ':</b> ' + data + '<br>');
-});
+socket.on('add_to_trick_area', addToTrickArea);
 
 //TODO Should this call a separate function like clear_hand?
 socket.on('clear_trick_area', function() {
