@@ -102,6 +102,26 @@ function resetTricksWon(nickname) {
   $(tricksVal).text(nickname + ": 0");
 }
 
+function updateMoney(nickname, money) {
+  var moneyVal = $('#money' + nickname);
+  if (moneyVal.length == 0) {
+    moneyVal = document.createElement("div");
+    moneyVal.setAttribute("id", "money" + nickname);
+    $('#money').append(moneyVal);
+  }
+  $(moneyVal).text(nickname + ": $" + money);
+}
+
+function updateScore(nickname, score) {
+  var scoreVal = $('#score' + nickname);
+  if (scoreVal.length == 0) {
+    scoreVal = document.createElement("div");
+    scoreVal.setAttribute("id", "score" + nickname);
+    $('#score').append(scoreVal);
+  }
+  $(scoreVal).text(nickname + ": " + score);
+}
+
 socket.on('add_to_hand', addCard);
 
 socket.on('remove_from_hand', removeCard);
@@ -110,10 +130,10 @@ socket.on('get_card', getCard);
 
 socket.on('clear_hand', clearHand);
 
-//Todo rename and clean up this function
 socket.on('add_to_trick_area', addToTrickArea);
 
 //TODO Should this call a separate function like clear_hand?
+//TODO Figure out how to let people see the last card played
 socket.on('clear_trick_area', function() {
   $('#trick').empty();
 });
@@ -123,6 +143,10 @@ socket.on('increment_tricks_won', incrementTricksWon);
 socket.on('reset_tricks_won', resetTricksWon);
 
 socket.on('display_message', addMessage);
+
+socket.on('update_money', updateMoney);
+
+socket.on('update_score', updateScore);
 
 //Todo rename and clean up this function
 socket.on('update_sequence', function (sender, data) {

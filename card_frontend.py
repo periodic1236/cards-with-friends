@@ -74,12 +74,12 @@ def PlayerTakeTrick(player, cards):
   player_socket.take_trick()
 
 def PlayerUpdateMoney(player, money):
-  # TODO(brazon) Figure out frontend first
-  pass
+  player_socket = CardNamespace.players[player]
+  player_socket.update_money(money)
 
 def PlayerUpdateScore(player, score):
-  # TODO(brazon) figure out frontend first
-  pass
+  player_socket = CardNamespace.players[player]
+  player_socket.update_score(score)
 
 # The socket.io namespace
 # always extend BaseNamespace; also add mixins if you want
@@ -134,6 +134,16 @@ class CardNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
     for p in self.my_room.players:
       player = CardNamespace.players[p]
       player.emit("add_to_trick_area", nickname, card)
+
+  def update_money(self, money):
+    for p in self.my_room.players:
+      player = CardNamespace.players[p]
+      player.emit("update_money", self.nickname, money)
+
+  def update_score(self, score):
+    for p in self.my_room.players:
+      player = CardNamespace.players[p]
+      player.emit("update_score", self.nickname, score)
 
   def take_trick(self):
     for p in self.my_room.players:
