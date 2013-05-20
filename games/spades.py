@@ -27,7 +27,7 @@ class Spades(TrickTakingGame):
   @classmethod
   def SortCards(cls, cards):
     """Sort a list of cards by value. Returns an iterator."""
-    return iter(sorted(cards, key=cls.GetCardValue))
+    return iter(sorted(cards, key=cls.GetCardValue, reverse=True))
 
   def PlayGame(self):
     """Play the game."""
