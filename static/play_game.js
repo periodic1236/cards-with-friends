@@ -32,6 +32,9 @@ function returnCard(e, card) {
     socket.emit('card', card);
     allowedCards = [];
   }
+  else {
+    addMessage('That card is not allowed');
+  }
 }
 
 function addCard(card, image) {
@@ -54,6 +57,13 @@ function addToTrickArea(card, image) {
   trickArea.append(newCard);
 }
 
+function addMessage(m) {
+  var messageArea = $('#messageBox');
+  var newMessage = document.createElement("div");
+  $(newMessage).text(m);
+  messageArea.append(newMessage);
+}
+
 function removeCard(card) {
   var hand = $('#hand');
   $('#' + card).remove();
@@ -61,6 +71,7 @@ function removeCard(card) {
 
 function getCard(allowed_cards) {
   allowedCards = allowed_cards;
+  addMessage("It's your turn.");
 }
 
 function clearHand() {
@@ -68,11 +79,27 @@ function clearHand() {
 }
 
 function incrementTricksWon(nickname) {
-  //TODO(brazon) implement once frontend complete
+  var tricksVal = $('#tricksTaken' + nickname);
+  if (tricksVal.length == 0) {
+    tricksVal = document.createElement("div");
+    tricksVal.setAttribute("id", "tricksTaken" + nickname);
+    $(tricksVal).text(nickname + ": 1");
+    $('#tricksTaken').append(tricksVal);
+  }
+  else {
+    var tricks = parseInt(tricksVal.text().split(' ')[1]);
+    tricksVal.text(nickname + ": " + (tricks + 1));
+  }
 }
 
 function resetTricksWon(nickname) {
-  //TODO(brazon) implement once frontend complete
+  var tricksVal = $('#tricksTaken' + nickname);
+  if (tricksVal.length == 0) {
+    tricksVal = document.createElement("div");
+    tricksVal.setAttribute("id", "tricksTaken" + nickname);
+    $('#tricksTaken').append(tricksVal);
+  }
+  $(tricksVal).text(nickname + ": 0");
 }
 
 socket.on('add_to_hand', addCard);
@@ -94,6 +121,8 @@ socket.on('clear_trick_area', function() {
 socket.on('increment_tricks_won', incrementTricksWon);
 
 socket.on('reset_tricks_won', resetTricksWon);
+
+socket.on('display_message', addMessage);
 
 //Todo rename and clean up this function
 socket.on('update_sequence', function (sender, data) {

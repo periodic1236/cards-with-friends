@@ -53,13 +53,12 @@ def PlayerClearHand(player):
   player_socket.clear_hand()
 
 def PlayerClearTaken(player):
-  # TODO(theresa) Add trick count field to frontend
   player_socket = CardNamespace.players[player]
   player_socket.clear_taken()
 
 def PlayerDisplayMessage(player, message):
-  # TODO(brazon) Figure out frontend
-  pass
+  player_socket = CardNamespace.players[player]
+  player_socket.display_message(message)
 
 def PlayerRemoveFromHand(player, cards):
   # cards is a list of Card objects
@@ -146,6 +145,10 @@ class CardNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
     for p in self.my_room.players:
       player = CardNamespace.players[p]
       player.emit("reset_tricks_won", self.nickname)
+
+  def display_message(self, message):
+    self.emit("display_message", message)
+
   # -- Events for room list --
 
   # client requested room list
