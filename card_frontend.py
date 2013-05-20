@@ -35,10 +35,12 @@ def GetCardFromPlayer(player, valid_plays, num_cards=1):
   valid_plays_map = dict(((x.id, x) for x in valid_plays))
   valid_plays_list = valid_plays_map.keys()
   print "here are the valid plays for player %s:" % player, valid_plays_map.values()
+  player_socket.start_turn()
   player_socket.get_card(valid_plays_list)
   while player_socket.card is None:
     print "waiting for player %s" % player
     sleep(1)
+  player_socket.end_turn()
   return [valid_plays_map[player_socket.card]]
 
 def PlayerAddToHand(player, cards):
@@ -156,6 +158,16 @@ class CardNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
       player = CardNamespace.players[p]
       player.emit("reset_tricks_won", self.nickname)
 
+  def start_turn(self):
+    for p in self.my_room.players:
+      player = CardNamespace.players[p]
+      player.emit("start_turn", self.nickname)
+
+  def end_turn(self):
+    for p in self.my_room.players:
+      player = CardNamespace.players[p]
+      player.emit("end_turn", self.nickname)
+
   def display_message(self, message):
     self.emit("display_message", message)
 
@@ -255,6 +267,8 @@ class CardNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
       # tell game you are ready
       print self.nickname, "is ready to start"
       self.ready = True
+      for p in self.my_room.players:
+        self.emit("register_player", p);
       with CardNamespace.lock:
         CardNamespace.event.notify_all()
 

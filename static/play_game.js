@@ -33,7 +33,9 @@ function returnCard(e, card) {
     allowedCards = [];
   }
   else {
-    addMessage('That card is not allowed');
+    if (allowedCards != '') {
+      addMessage('That card is not allowed');
+    }
   }
 }
 
@@ -71,7 +73,6 @@ function removeCard(card) {
 
 function getCard(allowed_cards) {
   allowedCards = allowed_cards;
-  addMessage("It's your turn.");
 }
 
 function clearHand() {
@@ -80,46 +81,50 @@ function clearHand() {
 
 function incrementTricksWon(nickname) {
   var tricksVal = $('#tricksTaken' + nickname);
-  if (tricksVal.length == 0) {
-    tricksVal = document.createElement("div");
-    tricksVal.setAttribute("id", "tricksTaken" + nickname);
-    $(tricksVal).text(nickname + ": 1");
-    $('#tricksTaken').append(tricksVal);
-  }
-  else {
-    var tricks = parseInt(tricksVal.text().split(' ')[1]);
-    tricksVal.text(nickname + ": " + (tricks + 1));
-  }
+  var tricks = parseInt(tricksVal.text().split(' ')[1]);
+  tricksVal.text(nickname + ": " + (tricks + 1));
 }
 
 function resetTricksWon(nickname) {
-  var tricksVal = $('#tricksTaken' + nickname);
-  if (tricksVal.length == 0) {
-    tricksVal = document.createElement("div");
-    tricksVal.setAttribute("id", "tricksTaken" + nickname);
-    $('#tricksTaken').append(tricksVal);
-  }
-  $(tricksVal).text(nickname + ": 0");
+  $('#tricksTaken' + nickname).text(nickname + ": 0");
 }
 
 function updateMoney(nickname, money) {
-  var moneyVal = $('#money' + nickname);
-  if (moneyVal.length == 0) {
-    moneyVal = document.createElement("div");
-    moneyVal.setAttribute("id", "money" + nickname);
-    $('#money').append(moneyVal);
-  }
-  $(moneyVal).text(nickname + ": $" + money);
+  $('#money' + nickname).text(nickname + ": $" + money);
 }
 
 function updateScore(nickname, score) {
-  var scoreVal = $('#score' + nickname);
-  if (scoreVal.length == 0) {
-    scoreVal = document.createElement("div");
-    scoreVal.setAttribute("id", "score" + nickname);
-    $('#score').append(scoreVal);
-  }
-  $(scoreVal).text(nickname + ": " + score);
+  $('#score' + nickname).text(nickname + ": " + score);
+}
+
+function registerPlayer(nickname) {
+  var playerName = document.createElement("div");
+  playerName.setAttribute("id", "player" + nickname);
+  $(playerName).text(nickname)
+  $('#players').append(playerName);
+  
+  var scoreVal = document.createElement("div");
+  scoreVal.setAttribute("id", "score" + nickname);
+  $(scoreVal).text(nickname + ": 0");
+  $('#score').append(scoreVal);
+
+  var moneyVal = document.createElement("div");
+  moneyVal.setAttribute("id", "money" + nickname);
+  $('#money').append(moneyVal);
+  $(moneyVal).text(nickname + ": $0");
+
+  var tricksVal = document.createElement("div");
+  tricksVal.setAttribute("id", "tricksTaken" + nickname);
+  $('#tricksTaken').append(tricksVal);
+  $(tricksVal).text(nickname + ": 0");
+}
+
+function startTurn(nickname) {
+  $('#player' + nickname).text('--> ' + nickname);
+}
+
+function endTurn(nickname) {
+  $('#player' + nickname).text(nickname);
 }
 
 socket.on('add_to_hand', addCard);
@@ -147,6 +152,12 @@ socket.on('display_message', addMessage);
 socket.on('update_money', updateMoney);
 
 socket.on('update_score', updateScore);
+
+socket.on('register_player', registerPlayer);
+
+socket.on('start_turn', startTurn);
+
+socket.on('end_turn', endTurn);
 
 //Todo rename and clean up this function
 socket.on('update_sequence', function (sender, data) {
