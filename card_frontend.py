@@ -23,8 +23,17 @@ def AddToTrickArea(player, cards):
     player_socket.add_to_trick_area(card.id, card.image_loc)
 
 def GetBidFromPlayer(player, valid_bids):
-  # TODO(brazon): Figure out frontend first
-  return None
+  player_socket = CardNamespace.players[player]
+  player_socket.bid = None
+  player_socket.start_turn(player)
+  print "here are the valid bids for player %s:" % player, valid_bids
+  player_socket.get_bid(valid_bids)
+  while player_socket.bid is None:
+    print "waiting for player %s" % player
+    sleep(1)
+  player_socket.end_turn()
+
+  return player_socket.bid
 
 def GetCardFromPlayer(player, valid_plays, num_cards=1):
   # TODO(brazon): num_cards not being 1 probably breaks lots of stuff
@@ -118,13 +127,19 @@ class CardNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
   def on_card(self, card):
     self.card = card
 
+  # runs when client plays a bid
+  def on_bid(self, bid):
+    self.bid = bid
+
   # add card to hand
   def add_card(self, card, image):
     self.emit("add_to_hand", card, image)
 
-  # start my turn
   def get_card(self, cards_allowed):
     self.emit("get_card", cards_allowed)
+
+  def get_bid(self, bids_allowed):
+    self.emit("get_bid", bids_allowed)
 
   def clear_hand(self):
     self.emit("clear_hand")

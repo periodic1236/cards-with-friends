@@ -4,7 +4,7 @@ var socket = io.connect();
 
 // Given a list of valid bids, will update the drop down list
 // of bids that a player can make
-function updateBids(validBids){
+function getBid(validBids){
 	var theBids = document.getElementById("bids");
 	
 	// first remove all previous valid bids
@@ -21,6 +21,13 @@ function updateBids(validBids){
 	}
 }
 
+function returnBid() {
+  var bid = $('#bids').val();
+  socket.emit('bid', bid);
+  $('#bids').empty();
+  return false;
+}
+
 function readyGame() {
   socket.emit('ready_game');
 }
@@ -29,6 +36,7 @@ function returnCard(e, card) {
   //TODO check that it is the players turn so that we can move allowedCards
   //to a function argument.
   if ($.inArray(card, allowedCards) != -1) {
+    $('#' + card).css('border', "solid 2px blue");  
     socket.emit('card', card);
     allowedCards = [];
   }
@@ -46,7 +54,9 @@ function addCard(card, image) {
 	newCard.setAttribute("class", 'card');
   newCard.setAttribute("id", card);
 	newCard.setAttribute("src", image);
-  newCard.addEventListener('click', function(e) { returnCard(e, card); });
+  newCard.addEventListener('click', function(e) {
+    returnCard(e, card);
+  });
   hand.append(newCard);
 }
 
@@ -127,6 +137,10 @@ function endTurn(nickname) {
   $('#player' + nickname).text(nickname);
 }
 
+function clearTrick() {
+  setTimeout(function() { $('#trick').empty()}, 1000);
+}
+
 socket.on('add_to_hand', addCard);
 
 socket.on('remove_from_hand', removeCard);
@@ -137,11 +151,7 @@ socket.on('clear_hand', clearHand);
 
 socket.on('add_to_trick_area', addToTrickArea);
 
-//TODO Should this call a separate function like clear_hand?
-//TODO Figure out how to let people see the last card played
-socket.on('clear_trick_area', function() {
-  $('#trick').empty();
-});
+socket.on('clear_trick_area', clearTrick);
 
 socket.on('increment_tricks_won', incrementTricksWon);
 
@@ -158,6 +168,8 @@ socket.on('register_player', registerPlayer);
 socket.on('start_turn', startTurn);
 
 socket.on('end_turn', endTurn);
+
+socket.on('get_bid', getBid);
 
 //Todo rename and clean up this function
 socket.on('update_sequence', function (sender, data) {
