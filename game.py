@@ -11,22 +11,21 @@ import uuid
 from deck import Deck
 from player import Player
 from pylib import utils
+from pylib.mixins import MessageMixin
 
 _DECK_DIR = "decks"
 
 
-class Game(utils.MessageMixin):
+class Game(MessageMixin):
   """A card game."""
 
   def __init__(self, players, deck):
     """Constructor.
 
     Args:
-      players: A sequence of player names (expected to be unique).
+      players: A list of Player objects.
       deck: The name of the deck for this game.
     """
-    super(Game, self).__init__()
-
     # Container for state variables.
     self._state = utils.AttributeDict()
 
@@ -42,8 +41,8 @@ class Game(utils.MessageMixin):
     # The players of the game.
     if not players:
       raise ValueError("Players cannot be empty")
-    self._players = [Player(name) for name in players]
-    self._num_players = len(self.players)
+    self._players = players
+    self._num_players = len(players)
     self._dealer = None
 
   def __getattribute__(self, name):

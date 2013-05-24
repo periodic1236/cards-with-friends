@@ -1,17 +1,115 @@
-import threading
-from gevent import Greenlet, monkey, sleep; monkey.patch_all()
+#!/usr/bin/env python2.7
+#
+# Copyright 2013 Cards with Friends LLC. All Rights Reserved.
 
+"""The main game engine module."""
+
+__author__ = "mqian@caltech.edu (Mike Qian)"
+
+from gevent import monkey; monkey.patch_all()
+
+import base64
+import functools
+import os
+import socket
+import sys
+import uuid
+import weakref
+
+from flask import Flask, flash, redirect, render_template, request, send_file, session, url_for
+import gevent
+from gevent import Greenlet, sleep
+from gevent.event import Event
+from gevent.queue import JoinableQueue
 from socketio import socketio_manage
-from socketio.namespace import BaseNamespace
 from socketio.mixins import RoomsMixin, BroadcastMixin
-from flask import session
+from socketio.namespace import BaseNamespace
+from socketio.server import SocketIOServer
+from werkzeug.wsgi import SharedDataMiddleware
+
+from games import *
+from player import Player
+from pylib import utils
+from pylib.mixins import MessageMixin
+
+
+GAMES = {
+    "Hearts": Hearts,
+    "HighestCard": HighestCard,
+    "Spades": Spades,
+}
+PORT = 8080
+
+
+##################################################
+##### FLASK ROUTES AND BASIC SETUP
+##################################################
+
+app = Flask(__name__)
+app.secret_key = os.urandom(24)
+app.debug = True
+
+def login_required(f):
+  @functools.wraps(f)
+  def wrapper(*args, **kwargs):
+    if "nickname" not in session:
+      flash("You are not logged in.")
+      return redirect(url_for("login"))
+    return f(*args, **kwargs)
+  return wrapper
+
+@app.route("/")
+def index():
+  return render_template("index.html")
+
+@app.route("/about_making_games")
+def documentation():
+  #TODO write documentation page
+  return render_template("documentation.html")
+
+@app.route("/game_table")
+@login_required
+def game_table():
+  return render_template("game_table.html")
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+  """Procedure to handle the login page."""
+  if request.method == "POST":
+    nickname = request.form["nick"]
+    if HandleLogin(nickname):
+      session["nickname"] = nickname
+      password = base64.urlsafe_b64encode(os.urandom(64))
+      session["password"] = password
+      SetPassword(nickname, password)
+      return redirect(url_for("room_list"))
+    else:
+      flash("Nickname is already taken. Pick another one.")
+      return render_template("login.html")
+  return render_template("login.html")
+
+@app.route("/room_list", methods=["GET", "POST"])
+@login_required
+def room_list():
+  return render_template("room_list.html")
+
+# this runs as soon as a client is started
+@app.route("/socket.io/<path:path>")
+def run_socketio(path):
+  # second argument maps urls to namespace classes
+  socketio_manage(request.environ, {"": CardNamespace}, request)
+  return "out"
+
+
+##################################################
+##### SERVER HANDLERS
+##################################################
 
 def HandleLogin(nickname):
   if nickname in CardNamespace.players:
     return False
-  else:
-    CardNamespace.players[nickname] = None
-    return True
+  CardNamespace.players[nickname] = None
+  return True
 
 def SetPassword(nickname, password):
   CardNamespace.passwords[nickname] = password
@@ -21,6 +119,14 @@ def AddToTrickArea(player, cards):
   player_socket = CardNamespace.players[player]
   for card in cards:
     player_socket.add_to_trick_area(card.id, card.image_loc)
+
+def EndGame(num_winners, results):
+  # TODO(brazon)
+  # results is an ordered dict from nickname -> score
+  # the first num_winners entries are the winners (in case of teams like spades)
+  # so you can do something like results.items() to get tuples (nickname, score) in order of win
+  # if you want me to pass you something simpler, let me know --Mike
+  pass
 
 def GetBidFromPlayer(player, valid_bids):
   player_socket = CardNamespace.players[player]
@@ -92,12 +198,61 @@ def PlayerUpdateScore(player, score):
   player_socket = CardNamespace.players[player]
   player_socket.update_score(score)
 
+
+##################################################
+##### CLASSES
+##################################################
+
+
+class GameManager(MessageMixin):
+  """Manages games and scores."""
+
+  games = {}
+  players = {}
+  in_room = weakref.WeakValueDictionary()
+
+  def CreateGame(self, game_type, players):
+    """Create a new game."""
+    if game_type not in GAMES:
+      raise ValueError("Game '{}' not found or not supported".format(game))
+
+    objs = [Player(name) for name in players]
+    game = GAMES[game_type](objs)
+
+    self.games[game.id] = game
+    self.players.update((p.id, p) for p in objs)
+    self.in_room.update((p.id, game) for p in objs)
+    return (game.id, objs)
+
+  def DeleteGame(self, game_id):
+    """Delete a previously-created game."""
+    if game_id not in self.games:
+      return KeyError("Invalid game ID: {}".format(game_id))
+    del self.games[game.id]
+
+  def StartGame(self, game_id):
+    """Start a previously-created game."""
+    if game_id not in self.games:
+      return KeyError("Invalid game ID: {}".format(game_id))
+    game = self.games[game_id]
+    results = game.PlayGame()
+    self.Notify("game_ended", results=results)
+    # TODO(mqian): How do we deal with the number of winners?
+
+  def _RecordScore(self, *args, **kwargs):
+    raise NotImplementedError
+
+  def _WriteHistory(self, *args, **kwargs):
+    raise NotImplementedError
+
+
 # The socket.io namespace
 # always extend BaseNamespace; also add mixins if you want
 # a new object of this type is created for each client
 class CardNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
 
   # state
+  manager = GameManager()
   rooms = []  # (static) list of rooms (instances of Room), keys are game names
   players = {}  # (static) dict of players (instances of CardNamespace), keys are nicknames
   passwords = {}
@@ -106,8 +261,7 @@ class CardNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
   isHost = 0  # 0 or 1 indicating whether this player is the host of my_room
   nickname = ""
   ready = False
-  lock = threading.RLock()
-  event = threading.Condition(lock)
+  queue = JoinableQueue()
 
   # runs when client refreshes the page, keeps sockets up to date
   def on_reconnect(self, nickname, password):
@@ -217,7 +371,7 @@ class CardNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
   # create a room
   def on_create_room(self):
     if self.my_room is None:
-      capacity = 2
+      capacity = 3
       self.my_room = Room(self, capacity)
       self.isHost = 1;
       CardNamespace.rooms.append(self.my_room)
@@ -281,20 +435,21 @@ class CardNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
     else:
       # tell game you are ready
       print self.nickname, "is ready to start"
-      self.ready = True
       for p in self.my_room.players:
-        self.emit("register_player", p);
-      with CardNamespace.lock:
-        CardNamespace.event.notify_all()
+        self.emit("register_player", p)
+      CardNamespace.queue.get()
+      CardNamespace.queue.task_done()
+
 
 # Room class
 class Room(object):
 
   def __init__(self, host, capacity):
-    self.host = host.nickname  # list of players (nicknames) currently joined
-    self.players = [host.nickname]
-    self.capacity = capacity  # total number of players
-    self.game = None;
+    self.id = uuid.uuid4()
+    self.host = host.nickname
+    self.players = [self.host]
+    self.capacity = list(utils.Flatten([capacity]))
+    self.game = None
 
   # delete this room and remove all players
   def __del__(self):
@@ -302,12 +457,12 @@ class Room(object):
       CardNamespace.players[p].my_room = None
 
   @property
-  def num_players(self):
-    return len(self.players)
+  def full(self):
+    return self.num_players in self.capacity
 
   @property
-  def full(self):
-    return self.num_players >= self.capacity
+  def num_players(self):
+    return len(self.players)
 
   def AddPlayer(self, p):
     if p.nickname in self.players:
@@ -326,18 +481,60 @@ class Room(object):
       p.my_room = None
 
   def StartGame(self):
-    from games.highest_card import HighestCard
-    #from games.hearts import Hearts
     print "Game 1"
-    self.game = HighestCard([p for p in self.players])
-    #self.game = Hearts([p for p in self.players])
+    self.game = Hearts([Player(p) for p in self.players])
     print "Game 2"
+    for _ in range(self.num_players):
+      CardNamespace.queue.put(None)
     for p in self.players:
       CardNamespace.players[p].emit('go_to_game_table')
-    while False in [CardNamespace.players[p].ready for p in self.players]:
-      with CardNamespace.lock:
-        CardNamespace.event.wait()
-    print "Game 3", [CardNamespace.players[p].ready for p in self.players]
-    Greenlet.spawn(self.game.PlayGame)
+    print "Joining"
+    CardNamespace.queue.join()
+    print "Left"
+    #print "Game 3", [CardNamespace.players[p].ready for p in self.players]
+    #Greenlet.spawn(self.game.PlayGame)
+    g = Greenlet(self.game.PlayGame)
+    #g.start_later(1)
+    g.join()
     print "Game 4"
 
+
+def Register():
+    # Notification handlers.
+  notify = {
+      "add_card": PlayerAddToHand,
+      "clear_hand": PlayerClearHand,
+      "clear_taken": PlayerClearTaken,
+      "display_message": PlayerDisplayMessage,
+      "game_ended": EndGame,
+      "played_card": AddToTrickArea,
+      "remove_card": PlayerRemoveFromHand,
+      "take_trick": PlayerTakeTrick,
+      "update_money": PlayerUpdateMoney,
+      "update_score": PlayerUpdateScore,
+  }
+  # Request handlers.
+  request = {
+      "get_bid": GetBidFromPlayer,
+      "get_play": GetCardFromPlayer,
+  }
+  MessageMixin.RegisterHandler("notify", **notify)
+  MessageMixin.RegisterHandler("request", **request)
+
+
+def main(*args):
+  Register()
+  global app
+  app = SharedDataMiddleware(app, {
+      "/": os.path.join(os.path.dirname(__file__), "static")
+  })
+  server = SocketIOServer(("0.0.0.0", PORT), app, resource="socket.io", policy_server=False)
+  print >>sys.stderr, "Starting server at http://{}:{}".format(socket.gethostname(), PORT)
+  server.serve_forever()
+
+
+if __name__ == "__main__":
+  if len(sys.argv) != 1:
+    print >>sys.stderr, "usage: {}".format(os.path.basename(sys.argv[0]))
+    sys.exit(1)
+  main(*sys.argv[1:])

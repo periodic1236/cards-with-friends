@@ -43,7 +43,7 @@ class HighestCard(TrickTakingGame):
         self.GetPlayerByIndex(self.lead).Take(*self.cards_played)
       # Calculate and add scores.
       self._ScoreRound()
-    return sorted(self._players, key=lambda x: x.score)
+    return sorted(self._players, key=lambda x: x.score, reverse=True)
 
   def ResetGame(self):
     """Reset the entire game state."""
@@ -95,7 +95,3 @@ class HighestCard(TrickTakingGame):
       scores[i] = len(p.taken) / self.num_players
     for p, score in zip(self.players, scores):
       p.AddToScore(score)
-
-
-if __name__ == "__main__":
-  pass

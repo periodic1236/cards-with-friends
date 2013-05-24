@@ -31,7 +31,7 @@ class Spades(TrickTakingGame):
 
   def PlayGame(self):
     """Play the game."""
-    # Play until a team's score is >= 500.
+    # Play until a team's score is >= 500 or <= -200.
     while not self._IsTerminal():
       # Reset hands, shuffle, and deal cards.
       self._NewRound()
@@ -52,7 +52,7 @@ class Spades(TrickTakingGame):
         self.GetPlayerByIndex(self.lead).Take(*self.cards_played)
       # Calculate and add scores.
       self._ScoreRound()
-    return sorted(self._players, key=lambda x: x.score)
+    return sorted(self._players, key=lambda x: x.score, reverse=True)
 
   def ResetGame(self):
     """Reset the entire game state."""
@@ -117,8 +117,8 @@ class Spades(TrickTakingGame):
     return card
 
   def _IsTerminal(self):
-    """Return True iff the game has ended. The game ends when a team's score is >= 500."""
-    return max(self.team_scores) >= 500
+    """Return True iff the game has ended. The game ends when a team has >= 500 or <= -200 pts."""
+    return max(self.team_scores) >= 500 or min(self.team_scores) <= -200
 
   def _NewRound(self):
     """Start a new round of the game."""
@@ -157,7 +157,3 @@ class Spades(TrickTakingGame):
       # Update individual player scores based on new team scores.
       self.players[i].score = self.team_scores[i]
       self.players[i + 2].score = self.team_scores[i]
-
-
-if __name__ == "__main__":
-  pass

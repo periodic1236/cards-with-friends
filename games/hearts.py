@@ -6,6 +6,7 @@
 
 __author__ = "ding@caltech.edu (David Ding)"
 
+from pylib import utils
 from trick_taking_game import TrickTakingGame
 
 
@@ -140,10 +141,12 @@ class Hearts(TrickTakingGame):
     if not self.cards_played:
       # If this is also the first trick, only the two of clubs may be played.
       if self.trick_num == 1:
-        two_clubs = utils.FindCard(player.hand, name="2C")
-        if not two_clubs:
-          raise ValueError("Logic error! Player was expected to have the two of clubs.")
-        return ("Must lead with two of clubs", two_clubs)
+        start = "3C" if self.num_players == 5 else "2C"
+        twothree = "three of clubs" if self.num_players == 5 else "two of clubs"
+        card = utils.FindCard(player.hand, name=start)
+        if not card:
+          raise ValueError("Logic error! Player was expected to have the {}.".format(twothree))
+        return ("Must lead with {}".format(twothree), [card])
       # If hearts is broken, any play from the hand is valid.
       if self.hearts_broken:
         return (None, list(player.hand))
@@ -220,7 +223,3 @@ class Hearts(TrickTakingGame):
                       (self.players[1], self.players[3], 3),
                       (self.players[2], self.players[0], 3),
                       (self.players[3], self.players[1], 3))
-
-
-if __name__ == "__main__":
-  pass

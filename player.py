@@ -9,15 +9,14 @@ __author__ = "ding@caltech.edu (David Ding)"
 import collections
 import uuid
 from card import Card
-import card_frontend
 from pylib import utils
+from pylib.mixins import MessageMixin
 
 
-class Player(utils.MessageMixin):
+class Player(MessageMixin):
   """A player in a game."""
 
   def __init__(self, name):
-    super(Player, self).__init__()
     self._id = uuid.uuid4()
     self._name = utils.Sanitize(name)
     self._hand = _Hand(self)
@@ -42,10 +41,12 @@ class Player(utils.MessageMixin):
 
   def ClearTaken(self):
     self.taken.clear()
-    self.Notify(self.name, "clear_taken")
+    self.Notify("clear_taken", player=self.name)
 
   def GetBid(self, error_msg, valid_bids, callback=None):
-    bid = self.Request(self.name, "get_bid", valid_bids=valid_bids)
+    bid = self.Request("get_bid", player=self.name, valid_bids=valid_bids)
+    if bid not in valid_bids:
+      raise RuntimeError("Returned bid was not valid: {}".format(bid))
     if callback is None:
       return bid
     callback(bid)
@@ -57,20 +58,17 @@ class Player(utils.MessageMixin):
     if num_cards > 1:
       raise NotImplementedError("Multi-card moves break things")
     print "About to request card"
-    cards = self.Request(self.name, "get_play", valid_plays=valid_plays, num_cards=num_cards)
+    cards = self.Request("get_play", player=self.name, valid_plays=valid_plays, num_cards=num_cards)
+    if len(cards) != num_cards:
+      raise RuntimeError("Expected {} cards, got {}".format(num_cards, len(cards)))
+    if not all(c in valid_plays for c in cards):
+      raise RuntimeError("Received an invalid play: {}".format(cards))
     self.hand.Remove(*cards)
-    self.Notify(self.name, "played_card", cards=cards)
+    self.Notify("played_card", player=self.name, cards=cards)
     result = cards if num_cards > 1 else cards[0]
     if callback is None:
       return result
     callback(result)
-
-  def MaybeGetPlay(self, num_cards=1, callback=None):
-    # TODO(brazon)
-    cards = None
-    if callback is None:
-      return cards
-    callback(cards)
 
   def Take(self, *cards):
     temp = set(cards)
@@ -78,7 +76,7 @@ class Player(utils.MessageMixin):
       # TODO(mqian): Raise a more meaningful error.
       raise TypeError
     self.taken |= temp
-    self.Notify(self.name, "take_trick", cards=temp)
+    self.Notify("take_trick", player=self.name, cards=temp)
     return True
 
   @property
@@ -96,7 +94,7 @@ class Player(utils.MessageMixin):
   @money.setter
   def money(self, value):
     self._money = value
-    self.Notify(self.name, "update_money", money=value)
+    self.Notify("update_money", player=self.name, money=value)
 
   @property
   def name(self):
@@ -109,7 +107,7 @@ class Player(utils.MessageMixin):
   @score.setter
   def score(self, value):
     self._score = value
-    self.Notify(self.name, "update_score", score=value)
+    self.Notify("update_score", player=self.name, score=value)
 
   @property
   def taken(self):
@@ -120,7 +118,7 @@ class Player(utils.MessageMixin):
     self._taken = value
 
 
-class _Hand(utils.MessageMixin):
+class _Hand(MessageMixin):
   """A player's hand."""
 
   def __init__(self, player):
@@ -151,13 +149,13 @@ class _Hand(utils.MessageMixin):
       # TODO(mqian): Raise a more meaningful error.
       raise TypeError
     self._cards |= temp
-    self.Notify(self.player.name, "add_card", cards=temp)
+    self.Notify("add_card", player=self.player.name, cards=temp)
     return True
 
   def Clear(self):
     """Remove all cards from the player's hand."""
     self._cards.clear()
-    self.Notify(self.player.name, "clear_hand")
+    self.Notify("clear_hand", player=self.player.name)
 
   def Remove(self, *cards):
     """Remove one or more cards from the player's hand."""
@@ -166,7 +164,7 @@ class _Hand(utils.MessageMixin):
       # TODO(mqian): Raise a more meaningful error.
       raise ValueError
     self._cards -= temp
-    self.Notify(self.player.name, "remove_card", cards=temp)
+    self.Notify("remove_card", player=self.player.name, cards=temp)
     return True
 
   @property

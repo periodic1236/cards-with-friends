@@ -13,7 +13,6 @@
      src="{{ url_for('static', filename='play_game.js') }}"></script>
    <script type="text/javascript">
      reconnect('{{ session.nickname }}', '{{ session.password|safe }}');
-     readyGame();
    </script>
    <link rel="stylesheet" type="text/css" 
      href="{{ url_for('static', filename='main.css') }}" />
@@ -53,4 +52,5 @@
 <div id="messageBox">
 </div>
 </body>
+<script type="text/javascript">readyGame();</script>
 </html>
