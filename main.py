@@ -261,7 +261,7 @@ class CardNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
   isHost = 0  # 0 or 1 indicating whether this player is the host of my_room
   nickname = ""
   ready = False
-  queue = JoinableQueue()
+  #queue = JoinableQueue()
 
   # runs when client refreshes the page, keeps sockets up to date
   def on_reconnect(self, nickname, password):
@@ -437,8 +437,9 @@ class CardNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
       print self.nickname, "is ready to start"
       for p in self.my_room.players:
         self.emit("register_player", p)
-      CardNamespace.queue.get()
-      CardNamespace.queue.task_done()
+      #CardNamespace.queue.get()
+      #CardNamespace.queue.task_done()
+      self.ready = True
 
 
 # Room class
@@ -484,18 +485,21 @@ class Room(object):
     print "Game 1"
     self.game = Hearts([Player(p) for p in self.players])
     print "Game 2"
-    for _ in range(self.num_players):
-      CardNamespace.queue.put(None)
+    #for _ in range(self.num_players):
+      #CardNamespace.queue.put(None)
     for p in self.players:
       CardNamespace.players[p].emit('go_to_game_table')
-    print "Joining"
-    CardNamespace.queue.join()
+    #print "Joining"
+    #CardNamespace.queue.join()
     print "Left"
-    #print "Game 3", [CardNamespace.players[p].ready for p in self.players]
-    #Greenlet.spawn(self.game.PlayGame)
-    g = Greenlet(self.game.PlayGame)
+    while False in [CardNamespace.players[p].ready for p in self.players]:
+      print "Game 3", [CardNamespace.players[p].ready for p in self.players]
+      sleep(0.5)
+    #print "ready:", [CardNamespace.players[p].ready for p in self.players]
+    Greenlet.spawn(self.game.PlayGame)
+    #g = Greenlet(self.game.PlayGame)
     #g.start_later(1)
-    g.join()
+    #g.join()
     print "Game 4"
 
 
