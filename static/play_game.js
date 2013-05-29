@@ -49,6 +49,7 @@ function returnCard(e, card) {
 
 function addCard(card, image) {
 	var hand = $('#hand');
+  hand.sortable();
 	// add the card to the hand
 	var newCard = document.createElement("img");
 	newCard.setAttribute("class", 'card');
@@ -57,6 +58,7 @@ function addCard(card, image) {
   newCard.addEventListener('click', function(e) {
     returnCard(e, card);
   });
+  $(newCard).sortable();
   hand.append(newCard);
 }
 
