@@ -26,6 +26,7 @@ var socket = io.connect();
         .autocomplete({
           delay: 0,
           minLength: 0,
+          autoFocus: true,
           source: $.proxy( this, "_source" )
         })
         .tooltip({
@@ -153,6 +154,7 @@ function returnBid() {
   var bid = $('#bids').val();
   socket.emit('bid', bid);
   $('#bids').empty();
+  $('.custom-combobox-input').val('');
   return false;
 }
 
