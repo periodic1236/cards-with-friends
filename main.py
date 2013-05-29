@@ -142,21 +142,24 @@ def GetBidFromPlayer(player, valid_bids):
   return player_socket.bid
 
 def GetCardFromPlayer(player, valid_plays, num_cards=1):
-  # TODO(brazon): num_cards not being 1 probably breaks lots of stuff
-  if num_cards != 1:
-    raise NotImplementedError('Multiple card plays are not supported yet.')
   player_socket = CardNamespace.players[player]
   player_socket.card = None
+  plays = []
   valid_plays_map = dict(((x.id, x) for x in valid_plays))
   valid_plays_list = valid_plays_map.keys()
   print "here are the valid plays for player %s:" % player, valid_plays_map.values()
   player_socket.start_turn()
-  player_socket.get_card(valid_plays_list)
-  while player_socket.card is None:
-    print "waiting for player %s" % player
-    sleep(1)
+  while num_cards > 0:
+    player_socket.get_card(valid_plays_list)
+    while player_socket.card is None:
+      print "waiting for player %s" % player
+      sleep(1)
+    valid_plays_list.remove(player_socket.card)
+    plays += [player_socket.card]
+    player_socket.card = None
+    num_cards -= 1
   player_socket.end_turn()
-  return [valid_plays_map[player_socket.card]]
+  return [valid_plays_map[i] for i in plays]
 
 def PlayerAddToHand(player, cards):
   # cards is a list of Card objects
@@ -484,23 +487,20 @@ class Room(object):
   def StartGame(self):
     print "Game 1"
     self.game = Hearts([Player(p) for p in self.players])
-    print "Game 2"
     #for _ in range(self.num_players):
       #CardNamespace.queue.put(None)
     for p in self.players:
       CardNamespace.players[p].emit('go_to_game_table')
     #print "Joining"
     #CardNamespace.queue.join()
-    print "Left"
     while False in [CardNamespace.players[p].ready for p in self.players]:
       print "Game 3", [CardNamespace.players[p].ready for p in self.players]
-      sleep(0.5)
+      sleep(0.05)
     #print "ready:", [CardNamespace.players[p].ready for p in self.players]
     Greenlet.spawn(self.game.PlayGame)
     #g = Greenlet(self.game.PlayGame)
     #g.start_later(1)
     #g.join()
-    print "Game 4"
 
 
 def Register():
