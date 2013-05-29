@@ -17,6 +17,8 @@
    <script type="text/javascript">
      reconnect('{{ session.nickname }}', '{{ session.password|safe }}');
    </script>
+   <link rel="stylesheet" type="text/css"
+     href="{{ url_for('static', filename='jquery-ui-1.10.3.custom.css') }}" />
    <link rel="stylesheet" type="text/css" 
      href="{{ url_for('static', filename='main.css') }}" />
 
@@ -47,10 +49,7 @@
 	<div id="money">Money:</div>
 	<div id="score">Score:</div>
 </div>
-<form name="bid"> 
-    <select id="bids" name="bids" size="1">  
-    </select> 
-</form>
+<select id="bids" name="bids" size="1"></select> 
 <button onClick="returnBid()">Submit Bid</button>
 <div id="messageBox">
 </div>
