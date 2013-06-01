@@ -82,7 +82,7 @@ class TrickTakingGame(Game):
     def process(from_, to, num_cards, valid=None):
       valid = list(from_.hand) if valid is None else list(valid)
       message = "Select {} cards to pass to {}".format(num_cards, to.name)
-      self.Notify("display_message", player=from_, message=message)
+      self.Notify("display_message", player=from_.name, message=message)
       cards = from_.GetCard("Cannot pass selected card", valid, num_cards)
       if not isinstance(cards, collections.Iterable):
         cards = [cards]

@@ -1,5 +1,6 @@
 var cardImagePath = "static/card_images/";
 var allowedCards = [];
+var errorMessage = "That card is not allowed!";
 var socket = io.connect();
 
 (function( $ ) {
@@ -169,10 +170,11 @@ function returnCard(e, card) {
     $('#' + card).css('border', "solid 2px blue");  
     socket.emit('card', card);
     allowedCards = [];
+    errorMessage = "That card is not allowed!";
   }
   else {
     if (allowedCards != '') {
-      addMessage('That card is not allowed');
+      addMessage(errorMessage);
     }
   }
 }
@@ -213,7 +215,8 @@ function removeCard(card) {
   $('#' + card).remove();
 }
 
-function getCard(allowed_cards) {
+function getCard(message, allowed_cards) {
+  errorMessage = message;
   allowedCards = allowed_cards;
 }
 

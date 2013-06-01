@@ -127,6 +127,7 @@ def GetBidFromPlayer(message, player, valid_bids):
   player_socket.bid = None
   player_socket.start_turn(player)
   print "here are the valid bids for player %s:" % player, valid_bids
+  player_socket.display_message(message)
   player_socket.get_bid(valid_bids)
   while player_socket.bid is None:
     print "waiting for player %s" % player
@@ -144,7 +145,7 @@ def GetCardFromPlayer(message, player, valid_cards, num_cards=1):
   print "here are the valid plays for player %s:" % player, valid_cards_map.values()
   player_socket.start_turn()
   while num_cards > 0:
-    player_socket.get_card(valid_cards_list)
+    player_socket.get_card(message, valid_cards_list)
     while player_socket.card is None:
       print "waiting for player %s" % player
       sleep(1)
@@ -285,8 +286,8 @@ class CardNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
   def add_card(self, card, image):
     self.emit("add_to_hand", card, image)
 
-  def get_card(self, cards_allowed):
-    self.emit("get_card", cards_allowed)
+  def get_card(self, message, cards_allowed):
+    self.emit("get_card", message, cards_allowed)
 
   def get_bid(self, bids_allowed):
     self.emit("get_bid", bids_allowed)
@@ -480,6 +481,7 @@ class Room(object):
     for p in self.players:
       CardNamespace.players[p].emit('go_to_game_table')
     while False in [CardNamespace.players[p].ready for p in self.players]:
+      print [CardNamespace.players[p].ready for p in self.players]
       sleep(0.05)
     g = Greenlet(self.game.PlayGame)
     g.start()
