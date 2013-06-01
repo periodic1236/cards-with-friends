@@ -79,7 +79,7 @@ def Flatten(lst):
 
 
 def Sanitize(string, repl="-"):
-  if not isinstance(string, (str, unicode)):
+  if not isinstance(string, basestring):
     raise TypeError("Expected string argument, got type '{}'".format(type(string)))
   return string
   # return _NON_ALPHANUM_RE.sub(repl, string)

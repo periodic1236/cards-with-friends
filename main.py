@@ -17,10 +17,8 @@ import uuid
 import weakref
 
 from flask import Flask, flash, redirect, render_template, request, send_file, session, url_for
-import gevent
 from gevent import Greenlet, sleep
 from gevent.event import Event
-from gevent.queue import JoinableQueue
 from socketio import socketio_manage
 from socketio.mixins import RoomsMixin, BroadcastMixin
 from socketio.namespace import BaseNamespace
@@ -120,12 +118,9 @@ def AddToTrickArea(player, cards):
   for card in cards:
     player_socket.add_to_trick_area(card.id, card.image_loc)
 
-def EndGame(num_winners, results):
+def EndGame(results):
   # TODO(brazon)
-  # results is an ordered dict from nickname -> score
-  # the first num_winners entries are the winners (in case of teams like spades)
-  # so you can do something like results.items() to get tuples (nickname, score) in order of win
-  # if you want me to pass you something simpler, let me know --Mike
+  # results is a list of tuples (nickname, score)
   pass
 
 def GetBidFromPlayer(player, valid_bids):
@@ -264,7 +259,6 @@ class CardNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
   isHost = 0  # 0 or 1 indicating whether this player is the host of my_room
   nickname = ""
   ready = False
-  #queue = JoinableQueue()
 
   # runs when client refreshes the page, keeps sockets up to date
   def on_reconnect(self, nickname, password):
@@ -440,8 +434,6 @@ class CardNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
       print self.nickname, "is ready to start"
       for p in self.my_room.players:
         self.emit("register_player", p)
-      #CardNamespace.queue.get()
-      #CardNamespace.queue.task_done()
       self.ready = True
 
 
@@ -485,18 +477,14 @@ class Room(object):
       p.my_room = None
 
   def StartGame(self):
-    print "Game 1"
+    #print "Game 1"
     self.game = Hearts([Player(p) for p in self.players])
-    #for _ in range(self.num_players):
-      #CardNamespace.queue.put(None)
+    print "Game 2"
     for p in self.players:
       CardNamespace.players[p].emit('go_to_game_table')
-    #print "Joining"
-    #CardNamespace.queue.join()
     while False in [CardNamespace.players[p].ready for p in self.players]:
       print "Game 3", [CardNamespace.players[p].ready for p in self.players]
-      sleep(0.05)
-    #print "ready:", [CardNamespace.players[p].ready for p in self.players]
+      sleep(0.5)
     Greenlet.spawn(self.game.PlayGame)
     #g = Greenlet(self.game.PlayGame)
     #g.start_later(1)

@@ -126,7 +126,7 @@ class _Hand(MessageMixin):
     self._cards = set()
 
   def __contains__(self, item):
-    if isinstance(item, (str, unicode)):
+    if isinstance(item, basestring):
       return bool(utils.FindCard(self._cards, name=item))
     return item in self._cards
 

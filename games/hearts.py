@@ -24,17 +24,6 @@ class Hearts(TrickTakingGame):
       self.deck.FindAndRemoveCard(name="2D")
     self.ResetGame()
 
-  @classmethod
-  def GetCardValue(cls, card):
-    """Return the value of a card as prescribed by this game."""
-    values = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 1]
-    return values.index(card.number)
-
-  @classmethod
-  def SortCards(cls, cards):
-    """Sort a list of cards by value. Returns an iterator."""
-    return iter(sorted(cards, key=cls.GetCardValue, reverse=True))
-
   def PlayGame(self):
     """Play the game."""
     # Play until someone's score is >= 100.
@@ -43,10 +32,11 @@ class Hearts(TrickTakingGame):
       self._NewRound()
       # Pass cards left, right, across, or not at all based on the round number.
       #self._Trade()
+
       # Identify first player of the round.
       self.lead = self._FindFirstPlayer()
       # Play 13 tricks.
-      for _ in xrange(13):
+      while self.GetPlayerByIndex(self.lead).hand:
         self.trick_num += 1
         self.cards_played = []
         # Have each player play a valid card for the trick.

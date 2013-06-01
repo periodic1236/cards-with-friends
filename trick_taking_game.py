@@ -17,6 +17,17 @@ class TrickTakingGame(Game):
   def __init__(self, players, deck):
     super(TrickTakingGame, self).__init__(players, deck)
 
+  @classmethod
+  def GetCardValue(cls, card):
+    """Return the value of a card as prescribed by this game."""
+    values = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 1]
+    return values.index(card.number)
+
+  @classmethod
+  def SortCards(cls, cards):
+    """Sort a list of cards by value. Returns an iterator."""
+    return iter(sorted(cards, key=cls.GetCardValue, reverse=True))
+
   def PlayGame(self, *args, **kwargs):
     raise NotImplementedError("This class should be implemented by users.")
 
@@ -40,11 +51,14 @@ class TrickTakingGame(Game):
       raise ValueError("Player '{}' not found in this game".format(first.name))
     if len(self.deck) < sum(i * sum(j) for i, j in patterns):
       raise ValueError("Not enough cards for the given deal pattern")
+    drawn = collections.defaultdict(list)
     for num_phases, pattern in patterns:
       for _ in xrange(num_phases):
         for num_cards in pattern:
-          self.GetPlayerByIndex(deal_idx).AddToHand(*self.deck.Draw(num_cards))
+          drawn[deal_idx].extend(self.deck.Draw(num_cards))
           deal_idx += 1
+    for deal_idx, cards in drawn:
+      self.GetPlayerByIndex(deal_idx).AddToHand(*self.SortCards(cards))
 
   def _EvaluateTrick(self, *args, **kwargs):
     raise NotImplementedError("This class should be implemented by users.")
