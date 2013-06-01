@@ -13,7 +13,6 @@ class HighestCard(TrickTakingGame):
   """The Highest Card card game."""
 
   def __init__(self, players, deck=None):
-    print "Game Created"
     if len(players) != 2:
       raise ValueError("Highest Card is a 2-player game, got {} players".format(len(players)))
     super(HighestCard, self).__init__(players, deck or "standard")
@@ -21,7 +20,6 @@ class HighestCard(TrickTakingGame):
 
   def PlayGame(self):
     """Play the game."""
-    print "PlayGame called"
     # Play until someone's score is >= 6.
     while not self._IsTerminal():
       # Reset hands, shuffle, and deal cards.

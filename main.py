@@ -135,25 +135,25 @@ def GetBidFromPlayer(message, player, valid_bids):
 
   return player_socket.bid
 
-def GetCardFromPlayer(message, player, valid_plays, num_cards=1):
+def GetCardFromPlayer(message, player, valid_cards, num_cards=1):
   player_socket = CardNamespace.players[player]
   player_socket.card = None
   plays = []
-  valid_plays_map = dict(((x.id, x) for x in valid_plays))
-  valid_plays_list = valid_plays_map.keys()
-  print "here are the valid plays for player %s:" % player, valid_plays_map.values()
+  valid_cards_map = dict(((x.id, x) for x in valid_cards))
+  valid_cards_list = valid_cards_map.keys()
+  print "here are the valid plays for player %s:" % player, valid_cards_map.values()
   player_socket.start_turn()
   while num_cards > 0:
-    player_socket.get_card(valid_plays_list)
+    player_socket.get_card(valid_cards_list)
     while player_socket.card is None:
       print "waiting for player %s" % player
       sleep(1)
-    valid_plays_list.remove(player_socket.card)
+    valid_cards_list.remove(player_socket.card)
     plays += [player_socket.card]
     player_socket.card = None
     num_cards -= 1
   player_socket.end_turn()
-  return [valid_plays_map[i] for i in plays]
+  return [valid_cards_map[i] for i in plays]
 
 def PlayerAddToHand(player, cards):
   # cards is a list of Card objects
@@ -476,12 +476,11 @@ class Room(object):
       p.my_room = None
 
   def StartGame(self):
-    #print "Game 1"
     self.game = Hearts([Player(p) for p in self.players])
     for p in self.players:
       CardNamespace.players[p].emit('go_to_game_table')
     while False in [CardNamespace.players[p].ready for p in self.players]:
-      sleep(1)
+      sleep(0.05)
     g = Greenlet(self.game.PlayGame)
     g.start()
     g.join()

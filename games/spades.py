@@ -75,7 +75,7 @@ class Spades(TrickTakingGame):
 
   def _GetValidBid(self, player):
     """Get a valid bid from the given player."""
-    return player.GetBid("Choose a bid between 1 and 13", [str(x) for x in xrange(1, 14)], int)
+    return player.GetBid("Must choose a bid between 1 and 13", [str(x) for x in xrange(1, 14)], int)
 
   def _GetValidMoves(self, player):
     """Get a valid move from the given player."""

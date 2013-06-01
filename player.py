@@ -63,11 +63,11 @@ class Player(MessageMixin):
       raise ValueError("num_cards must be positive, got {}".format(num_cards))
     validated = False
     while not validated:
-      cards = self.Request("get_card", message=message, player=self.name, valid_plays=valid_plays,
+      cards = self.Request("get_card", message=message, player=self.name, valid_cards=valid_cards,
                            num_cards=num_cards)
       if len(cards) != num_cards:
         raise RuntimeError("Expected {} cards, got {}".format(num_cards, len(cards)))
-      if not all(c in valid_plays for c in cards):
+      if not all(c in valid_cards for c in cards):
         raise RuntimeError("Received an invalid play: {}".format(cards))
       if validator is not None:
         cards = validator(cards)
@@ -79,8 +79,8 @@ class Player(MessageMixin):
       callback(cards)
     return cards
 
-  def GetPlay(self, message, valid_plays, num_cards=1, validator=None, callback=None):
-    cards = self.GetCard(message, valid_plays, num_cards, validator, callback)
+  def GetPlay(self, message, valid_cards, num_cards=1, validator=None, callback=None):
+    cards = self.GetCard(message, valid_cards, num_cards, validator, callback)
     self.Notify("played_card", player=self.name, cards=cards)
     return cards
 
