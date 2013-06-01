@@ -352,6 +352,7 @@ class CardNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
   @staticmethod
   def update_all_room_lists():
     # Compile room list data
+    game_list = [room.game_name for room in CardNamespace.rooms];
     host_list = [room.host for room in CardNamespace.rooms]
     players_list = [room.num_players for room in CardNamespace.rooms]
     capacity_list = [room.capacity for room in CardNamespace.rooms]
@@ -363,13 +364,12 @@ class CardNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
           room_index = CardNamespace.rooms.index(player.my_room)
         else:
           print "Something is wrong!"
-      player.emit("update_room_list", host_list, players_list, capacity_list, room_index, player.isHost)
+      player.emit("update_room_list", game_list, host_list, players_list, capacity_list, room_index, player.isHost)
 
   # create a room
-  def on_create_room(self):
+  def on_create_room(self, game_name, num_players):
     if self.my_room is None:
-      capacity = 3
-      self.my_room = Room(self, capacity)
+      self.my_room = Room(self, game_name, num_players)
       self.isHost = 1;
       CardNamespace.rooms.append(self.my_room)
       CardNamespace.update_all_room_lists()
@@ -440,11 +440,12 @@ class CardNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
 # Room class
 class Room(object):
 
-  def __init__(self, host, capacity):
+  def __init__(self, host, game_name, capacity):
     self.id = uuid.uuid4()
     self.host = host.nickname
+    self.game_name = game_name
     self.players = [self.host]
-    self.capacity = list(utils.Flatten([capacity]))
+    self.capacity = capacity
     self.game = None
 
   # delete this room and remove all players
@@ -454,7 +455,7 @@ class Room(object):
 
   @property
   def full(self):
-    return self.num_players in self.capacity
+    return self.num_players == self.capacity
 
   @property
   def num_players(self):
@@ -477,6 +478,8 @@ class Room(object):
       p.my_room = None
 
   def StartGame(self):
+    # TODO: start correct type of game (self.game_name)
+    # with correct number of players (self.capacity)
     self.game = Hearts([Player(p) for p in self.players])
     for p in self.players:
       CardNamespace.players[p].emit('go_to_game_table')
