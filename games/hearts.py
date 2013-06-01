@@ -28,7 +28,7 @@ class Hearts(TrickTakingGame):
   def GetCardValue(cls, card):
     """Return the value of a card as prescribed by this game."""
     values = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 1]
-    suits = ["spades", "diamonds", "clubs", "hearts"]
+    suits = ["clubs", "diamonds", "spades", "hearts"]
     return values.index(card.number) + 13 * suits.index(card.suit)
 
   def PlayGame(self):
@@ -37,14 +37,12 @@ class Hearts(TrickTakingGame):
     while not self._IsTerminal():
       # Reset hands, shuffle, and deal cards.
       self._NewRound()
-      # Pass cards left, right, across, or not at all based on the round number.
-      # TODO(ding): Remove when support for trading is implemented in non-4-player games.
-      if self.num_players == 4:
-        self._Trade()
+      # Pass cards based on the round number and number of players in the game.
+      self._Trade()
 
       # Identify first player of the round.
       self.lead = self._FindFirstPlayer()
-      # Play 13 tricks.
+      # Play tricks until hands are empty.
       while self.GetPlayerByIndex(self.lead).hand:
         self.trick_num += 1
         self.cards_played = []
@@ -169,7 +167,7 @@ class Hearts(TrickTakingGame):
 
   def _GetValidPlay(self, player):
     """Get a valid move from the given player."""
-    card = player.GetPlay(*self._GetValidMoves(player))
+    card = player.GetPlay(*self._GetValidMoves(player))[0]
     if card.suit == "hearts" and not self.hearts_broken:
       self.hearts_broken = True
     return card
@@ -206,19 +204,13 @@ class Hearts(TrickTakingGame):
 
   def _Trade(self):
     """Trade cards between players. No trading occurs every 4th round."""
-    # TODO(ding): Add support for non-4-player games.
+    num_cards = 2 if self.num_players == 5 else 3
     if self.round_num % 4 == 1:
-      self._PassCards((self.players[0], self.players[1], 3),
-                      (self.players[1], self.players[2], 3),
-                      (self.players[2], self.players[3], 3),
-                      (self.players[3], self.players[0], 3))
+      self._PassCards(*((self.GetPlayerByIndex(i), self.GetPlayerByIndex(i + 1), num_cards)
+                        for i in xrange(self.num_players)))
     elif self.round_num % 4 == 2:
-      self._PassCards((self.players[0], self.players[3], 3),
-                      (self.players[1], self.players[0], 3),
-                      (self.players[2], self.players[1], 3),
-                      (self.players[3], self.players[2], 3))
-    elif self.round_num % 4 == 3:
-      self._PassCards((self.players[0], self.players[2], 3),
-                      (self.players[1], self.players[3], 3),
-                      (self.players[2], self.players[0], 3),
-                      (self.players[3], self.players[1], 3))
+      self._PassCards(*((self.GetPlayerByIndex(i), self.GetPlayerByIndex(i - 1), num_cards)
+                        for i in xrange(self.num_players)))
+    elif self.round_num % 4 == 3 and self.num_players == 4:
+      self._PassCards(*((self.GetPlayerByIndex(i), self.GetPlayerByIndex(i + 2), num_cards)
+                        for i in xrange(self.num_players)))

@@ -43,32 +43,46 @@ class Player(MessageMixin):
     self.taken.clear()
     self.Notify("clear_taken", player=self.name)
 
-  def GetBid(self, error_msg, valid_bids, callback=None):
-    bid = self.Request("get_bid", player=self.name, valid_bids=valid_bids)
-    if bid not in valid_bids:
-      raise RuntimeError("Returned bid was not valid: {}".format(bid))
-    if callback is None:
-      return bid
-    callback(bid)
+  def GetBid(self, message, valid_bids, validator=None, callback=None):
+    validated = False
+    while not validated:
+      bid = self.Request("get_bid", message=message, player=self.name, valid_bids=valid_bids)
+      if bid not in valid_bids:
+        raise RuntimeError("Returned bid was not valid: {}".format(bid))
+      if validator is not None:
+        bid = validator(bid)
+        validated = bid is not False
+      else:
+        validated = True
+    if callback is not None:
+      callback(bid)
+    return bid
 
-  def GetPlay(self, error_msg, valid_plays, num_cards=1, validator=None, callback=None):
+  def GetCard(self, message, valid_cards, num_cards=1, validator=None, callback=None):
     if num_cards < 1:
       raise ValueError("num_cards must be positive, got {}".format(num_cards))
     validated = False
     while not validated:
-      cards = self.Request("get_play", player=self.name, valid_plays=valid_plays,
+      cards = self.Request("get_card", message=message, player=self.name, valid_plays=valid_plays,
                            num_cards=num_cards)
       if len(cards) != num_cards:
         raise RuntimeError("Expected {} cards, got {}".format(num_cards, len(cards)))
       if not all(c in valid_plays for c in cards):
         raise RuntimeError("Received an invalid play: {}".format(cards))
-      validated = bool(validator(cards)) if validator is not None else True
+      if validator is not None:
+        cards = validator(cards)
+        validated = cards is not False
+      else:
+        validated = True
     self.hand.Remove(*cards)
-    self.Notify("played_card", player=self.name, cards=cards)
-    result = cards if num_cards > 1 else cards[0]
     if callback is not None:
-      callback(result)
-    return result
+      callback(cards)
+    return cards
+
+  def GetPlay(self, message, valid_plays, num_cards=1, validator=None, callback=None):
+    cards = self.GetCard(message, valid_plays, num_cards, validator, callback)
+    self.Notify("played_card", player=self.name, cards=cards)
+    return cards
 
   def Take(self, *cards):
     temp = set(cards)

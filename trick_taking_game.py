@@ -81,7 +81,8 @@ class TrickTakingGame(Game):
 
     def process(from_, to, num_cards, valid=None):
       valid = list(from_.hand) if valid is None else list(valid)
-      cards = from_.GetPlay(None, valid, num_cards)
+      message = "Select {} cards to pass to {}".format(num_cards, to.name)
+      cards = from_.GetCard(message, valid, num_cards)
       if not isinstance(cards, collections.Iterable):
         cards = [cards]
       accum[to] |= set(cards)

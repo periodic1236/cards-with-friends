@@ -18,7 +18,6 @@ import weakref
 
 from flask import Flask, flash, redirect, render_template, request, send_file, session, url_for
 from gevent import Greenlet, sleep
-from gevent.event import Event
 from socketio import socketio_manage
 from socketio.mixins import RoomsMixin, BroadcastMixin
 from socketio.namespace import BaseNamespace
@@ -123,7 +122,7 @@ def EndGame(results):
   # results is a list of tuples (nickname, score)
   pass
 
-def GetBidFromPlayer(player, valid_bids):
+def GetBidFromPlayer(message, player, valid_bids):
   player_socket = CardNamespace.players[player]
   player_socket.bid = None
   player_socket.start_turn(player)
@@ -136,7 +135,7 @@ def GetBidFromPlayer(player, valid_bids):
 
   return player_socket.bid
 
-def GetCardFromPlayer(player, valid_plays, num_cards=1):
+def GetCardFromPlayer(message, player, valid_plays, num_cards=1):
   player_socket = CardNamespace.players[player]
   player_socket.card = None
   plays = []
@@ -479,16 +478,13 @@ class Room(object):
   def StartGame(self):
     #print "Game 1"
     self.game = Hearts([Player(p) for p in self.players])
-    print "Game 2"
     for p in self.players:
       CardNamespace.players[p].emit('go_to_game_table')
     while False in [CardNamespace.players[p].ready for p in self.players]:
-      print "Game 3", [CardNamespace.players[p].ready for p in self.players]
-      sleep(0.5)
-    Greenlet.spawn(self.game.PlayGame)
-    #g = Greenlet(self.game.PlayGame)
-    #g.start_later(1)
-    #g.join()
+      sleep(1)
+    g = Greenlet(self.game.PlayGame)
+    g.start()
+    g.join()
 
 
 def Register():
@@ -508,7 +504,7 @@ def Register():
   # Request handlers.
   request = {
       "get_bid": GetBidFromPlayer,
-      "get_play": GetCardFromPlayer,
+      "get_card": GetCardFromPlayer,
   }
   MessageMixin.RegisterHandler("notify", **notify)
   MessageMixin.RegisterHandler("request", **request)

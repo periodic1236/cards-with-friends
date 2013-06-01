@@ -34,7 +34,7 @@ class Spades(TrickTakingGame):
       # Get bids from each player.
       self._Bid()
 
-      # Play 13 tricks.
+      # Play tricks until hands are empty.
       while self.GetPlayerByIndex(self.lead).hand:
         self.trick_num += 1
         self.cards_played = []
@@ -75,11 +75,7 @@ class Spades(TrickTakingGame):
 
   def _GetValidBid(self, player):
     """Get a valid bid from the given player."""
-    return player.GetBid(*self._GetValidBidAmounts(player))
-
-  def _GetValidBidAmounts(self, player):
-    """Return a list of valid bids for the given player based on the current state."""
-    return ("Bid must be between 1 and 13, inclusive", list(xrange(1, 14)))
+    return player.GetBid("Choose a bid between 1 and 13", [str(x) for x in xrange(1, 14)], int)
 
   def _GetValidMoves(self, player):
     """Get a valid move from the given player."""
@@ -107,7 +103,7 @@ class Spades(TrickTakingGame):
 
   def _GetValidPlay(self, player):
     """Get a valid move from the given player."""
-    card = player.GetPlay(*self._GetValidMoves(player))
+    card = player.GetPlay(*self._GetValidMoves(player))[0]
     if card.suit == "spades" and not self.spades_broken:
       self.spades_broken = True
     return card
