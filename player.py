@@ -51,24 +51,24 @@ class Player(MessageMixin):
       return bid
     callback(bid)
 
-  def GetPlay(self, error_msg, valid_plays, num_cards=1, callback=None):
+  def GetPlay(self, error_msg, valid_plays, num_cards=1, validator=None, callback=None):
     if num_cards < 1:
       raise ValueError("num_cards must be positive, got {}".format(num_cards))
-    # TODO(brazon): Figure out what to do about multi-card plays...
-    if num_cards > 1:
-      raise NotImplementedError("Multi-card moves break things")
-    print "About to request card"
-    cards = self.Request("get_play", player=self.name, valid_plays=valid_plays, num_cards=num_cards)
-    if len(cards) != num_cards:
-      raise RuntimeError("Expected {} cards, got {}".format(num_cards, len(cards)))
-    if not all(c in valid_plays for c in cards):
-      raise RuntimeError("Received an invalid play: {}".format(cards))
+    validated = False
+    while not validated:
+      cards = self.Request("get_play", player=self.name, valid_plays=valid_plays,
+                           num_cards=num_cards)
+      if len(cards) != num_cards:
+        raise RuntimeError("Expected {} cards, got {}".format(num_cards, len(cards)))
+      if not all(c in valid_plays for c in cards):
+        raise RuntimeError("Received an invalid play: {}".format(cards))
+      validated = bool(validator(cards)) if validator is not None else True
     self.hand.Remove(*cards)
     self.Notify("played_card", player=self.name, cards=cards)
     result = cards if num_cards > 1 else cards[0]
-    if callback is None:
-      return result
-    callback(result)
+    if callback is not None:
+      callback(result)
+    return result
 
   def Take(self, *cards):
     temp = set(cards)
@@ -149,7 +149,7 @@ class _Hand(MessageMixin):
       # TODO(mqian): Raise a more meaningful error.
       raise TypeError
     self._cards |= temp
-    self.Notify("add_card", player=self.player.name, cards=temp)
+    self.Notify("add_card", player=self.player.name, cards=cards)
     return True
 
   def Clear(self):
@@ -164,7 +164,7 @@ class _Hand(MessageMixin):
       # TODO(mqian): Raise a more meaningful error.
       raise ValueError
     self._cards -= temp
-    self.Notify("remove_card", player=self.player.name, cards=temp)
+    self.Notify("remove_card", player=self.player.name, cards=cards)
     return True
 
   @property

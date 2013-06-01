@@ -24,6 +24,13 @@ class Hearts(TrickTakingGame):
       self.deck.FindAndRemoveCard(name="2D")
     self.ResetGame()
 
+  @classmethod
+  def GetCardValue(cls, card):
+    """Return the value of a card as prescribed by this game."""
+    values = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 1]
+    suits = ["spades", "diamonds", "clubs", "hearts"]
+    return values.index(card.number) + 13 * suits.index(card.suit)
+
   def PlayGame(self):
     """Play the game."""
     # Play until someone's score is >= 100.
@@ -31,7 +38,9 @@ class Hearts(TrickTakingGame):
       # Reset hands, shuffle, and deal cards.
       self._NewRound()
       # Pass cards left, right, across, or not at all based on the round number.
-      #self._Trade()
+      # TODO(ding): Remove when support for trading is implemented in non-4-player games.
+      if self.num_players == 4:
+        self._Trade()
 
       # Identify first player of the round.
       self.lead = self._FindFirstPlayer()

@@ -22,7 +22,8 @@ class Spades(TrickTakingGame):
   def GetCardValue(cls, card):
     """Return the value of a card as prescribed by this game."""
     values = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 1]
-    return values.index(card.number) + (13 if card.suit == "spades" else 0)
+    suits = ["hearts", "clubs", "diamonds", "spades"]
+    return values.index(card.number) + 13 * suits.index(card.suit)
 
   def PlayGame(self):
     """Play the game."""
