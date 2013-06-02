@@ -370,7 +370,7 @@ class CardNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
         if player.my_room in CardNamespace.rooms:
           room_index = CardNamespace.rooms.index(player.my_room)
         else:
-          print "Something is wrong!"
+          print "Something is wrong with", player.nickname, player.my_room.id
       player.emit("update_room_list", game_list, host_list, players_list, capacity_list, room_index, player.isHost)
 
   # create a room
@@ -417,8 +417,8 @@ class CardNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
       # deleted room successfully
       self.isHost = 0
       CardNamespace.rooms.remove(self.my_room)
-      del self.my_room
-      self.my_room = None
+      for p in self.my_room.players:
+        CardNamespace.players[p].my_room = None
       CardNamespace.update_all_room_lists()
 
   # Start game
@@ -454,11 +454,6 @@ class Room(object):
     self.players = [self.host]
     self.capacity = capacity
     self.game = None
-
-  # delete this room and remove all players
-  def __del__(self):
-    for p in self.players:
-      CardNamespace.players[p].my_room = None
 
   @property
   def full(self):
