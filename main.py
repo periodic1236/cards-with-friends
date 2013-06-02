@@ -118,9 +118,16 @@ def AddToTrickArea(player, cards):
     player_socket.add_to_trick_area(card.id, card.image_loc)
 
 def EndGame(results):
-  # TODO(brazon)
   # results is a list of tuples (nickname, score)
-  pass
+  winning_score = results[0][1]
+  for i in results:
+    player_socket = CardNamespace.players[i[0]]
+    player_socket.display_message('The game is over.')
+    if i[1] == winning_score:
+      player_socket.display_message('You won.')
+    else:
+      player_socket.display_message('You lost.')
+    player_socket.display_message('The final scores were: ' + str(results))
 
 def GetBidFromPlayer(message, player, valid_bids):
   player_socket = CardNamespace.players[player]
