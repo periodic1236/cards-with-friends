@@ -6,7 +6,7 @@
 
 __author__ = "mqian@caltech.edu (Mike Qian)"
 
-from gevent import monkey; monkey.patch_all()
+from gevent import Greenlet, monkey, sleep; monkey.patch_all()
 
 import base64
 import functools
@@ -17,7 +17,6 @@ import uuid
 import weakref
 
 from flask import Flask, flash, redirect, render_template, request, send_file, session, url_for
-from gevent import Greenlet, sleep
 from socketio import socketio_manage
 from socketio.mixins import RoomsMixin, BroadcastMixin
 from socketio.namespace import BaseNamespace
@@ -37,16 +36,16 @@ GAMES = {
     "Spades": Spades,
 }
 PORT = 8080
+UPLOAD_FOLDER = "uploads"
 
 
 ##################################################
 ##### FLASK ROUTES AND BASIC SETUP
 ##################################################
 
-UPLOAD_FOLDER = 'uploads'
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
-app.debug = True
+app.debug = False
 
 def allowed_file(filename):
   return '.' in filename and filename.rsplit('.', 1)[1] == 'py'
@@ -545,8 +544,8 @@ def main(*args):
   app = SharedDataMiddleware(app, {
       "/": os.path.join(os.path.dirname(__file__), "static")
   })
-  server = SocketIOServer(("0.0.0.0", PORT), app, resource="socket.io", policy_server=False)
   print >>sys.stderr, "Starting server at http://{}:{}".format(socket.gethostname(), PORT)
+  server = SocketIOServer(("0.0.0.0", PORT), app, resource="socket.io", policy_server=False)
   server.serve_forever()
 
 
