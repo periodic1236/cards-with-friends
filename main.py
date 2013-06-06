@@ -547,19 +547,10 @@ app = SharedDataMiddleware(app, {
 })
 
 
-def main(*args):
-  Register()
-  global app
-  app = SharedDataMiddleware(app, {
-      "/": os.path.join(os.path.dirname(__file__), "static")
-  })
-  print >>sys.stderr, "Starting server at http://{}:{}".format(socket.gethostname(), PORT)
-  server = SocketIOServer(("0.0.0.0", PORT), app, resource="socket.io", policy_server=False)
-  server.serve_forever()
-
-
 if __name__ == "__main__":
   if len(sys.argv) != 1:
     print >>sys.stderr, "usage: {}".format(os.path.basename(sys.argv[0]))
     sys.exit(1)
-  main(*sys.argv[1:])
+  print >>sys.stderr, "Starting server at http://{}:{}".format(socket.gethostname(), PORT)
+  server = SocketIOServer(("0.0.0.0", PORT), app, resource="socket.io", policy_server=False)
+  server.serve_forever()
