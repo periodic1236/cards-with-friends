@@ -35,7 +35,10 @@ GAMES = {
     "HighestCard": HighestCard,
     "Spades": Spades,
 }
-PORT = 8080
+try:
+  PORT = int(os.getenv("PORT"))
+except ValueError:
+  PORT = 5000
 UPLOAD_FOLDER = "uploads"
 
 
@@ -536,6 +539,12 @@ def Register():
   }
   MessageMixin.RegisterHandler("notify", **notify)
   MessageMixin.RegisterHandler("request", **request)
+
+
+Register()
+app = SharedDataMiddleware(app, {
+    "/": os.path.join(os.path.dirname(__file__), "static")
+})
 
 
 def main(*args):
