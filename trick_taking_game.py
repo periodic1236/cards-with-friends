@@ -15,6 +15,12 @@ class TrickTakingGame(Game):
   """A trick-taking game."""
 
   def __init__(self, players, deck):
+    """Constructor.
+
+    Args:
+      players: A list of Player objects.
+      deck: The name of the deck for this game.
+    """
     super(TrickTakingGame, self).__init__(players, deck)
 
   @classmethod

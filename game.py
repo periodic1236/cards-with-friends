@@ -64,15 +64,18 @@ class Game(MessageMixin):
       object.__setattr__(self, name, value)
 
   def GetPlayerByIndex(self, index):
+    """Get a player in the list of players at the specified index (modulo the number of players)"""
     return self.players[index % self.num_players]
 
   def GetPlayerByName(self, name):
+    """Get a player by their name. If the player cannot be found, raise an error."""
     try:
       return next(player for player in self.players if player.name == name)
     except StopIteration:
       raise ValueError("Player '{}' not found in this game".format(name))
 
   def GetPlayerIndex(self, player):
+    """Get the index of a player given an instance of a player. If the player cannot be found, raise an error."""
     if not isinstance(player, (Player, int)):
       raise TypeError("player must be a Player or int, got type '{}'".format(type(player)))
     try:
@@ -81,7 +84,7 @@ class Game(MessageMixin):
       raise ValueError("Player '{}' not found in this game".format(player.name))
 
   def ResetPlayers(self, score=None):
-    """Reset the state of every player."""
+    """Reset the state of every player: clear the hands and cards taken, and set the score of every player to the specified score."""
     for player in self.players:
       player.ClearHand()
       player.ClearTaken()

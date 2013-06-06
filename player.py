@@ -31,19 +31,24 @@ class Player(MessageMixin):
                                               self.id)
 
   def AddToHand(self, *cards):
+    """Add cards to the player's hand."""
     return self.hand.Add(*cards)
 
   def AddToScore(self, score):
+    """Add the specified amount to the player's current score."""
     self.score += score
 
   def ClearHand(self):
+    """Clear the player's hand"""
     self.hand.Clear()
 
   def ClearTaken(self):
+    """Clear the cards that the player has taken."""
     self.taken.clear()
     self.Notify("clear_taken", player=self.name)
 
   def GetBid(self, message, valid_bids, validator=None, callback=None):
+    """Get a bid from the player, given the message to tell them and the valid bids they can make."""
     validated = False
     while not validated:
       bid = self.Request("get_bid", message=message, player=self.name, valid_bids=valid_bids)
@@ -59,6 +64,7 @@ class Player(MessageMixin):
     return bid
 
   def GetCard(self, message, valid_cards, num_cards=1, validator=None, callback=None):
+    """Get cards from the player, given the message to tell them, the valid cards they can play, and the number of cards to play (default set to 1)"""
     if num_cards < 1:
       raise ValueError("num_cards must be positive, got {}".format(num_cards))
     validated = False
@@ -80,11 +86,13 @@ class Player(MessageMixin):
     return cards
 
   def GetPlay(self, message, valid_cards, num_cards=1, validator=None, callback=None):
+    """Get cards from the player, given the message to tell them, the valid cards they can play, and the number of cards to play (default set to 1)"""
     cards = self.GetCard(message, valid_cards, num_cards, validator, callback)
     self.Notify("played_card", player=self.name, cards=cards)
     return cards
 
   def Take(self, *cards):
+    """Add cards to the cards a player has taken."""
     temp = set(cards)
     if not all(isinstance(item, Card) for item in temp):
       # TODO(mqian): Raise a more meaningful error.
