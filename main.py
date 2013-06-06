@@ -35,7 +35,10 @@ GAMES = {
     "HighestCard": HighestCard,
     "Spades": Spades,
 }
-PORT = os.getenv("PORT", 8080)
+try:
+  PORT = int(os.getenv("PORT"))
+except ValueError:
+  PORT = 5000
 UPLOAD_FOLDER = "uploads"
 
 
@@ -545,7 +548,7 @@ def main(*args):
       "/": os.path.join(os.path.dirname(__file__), "static")
   })
   print >>sys.stderr, "Starting server at http://{}:{}".format(socket.gethostname(), PORT)
-  server = SocketIOServer(("0.0.0.0", PORT), app, resource="socket.io", policy_server=False)
+  server = SocketIOServer(("", PORT), app, resource="socket.io", policy_server=False)
   server.serve_forever()
 
 
