@@ -22,6 +22,7 @@ from socketio import socketio_manage
 from socketio.mixins import RoomsMixin, BroadcastMixin
 from socketio.namespace import BaseNamespace
 from socketio.server import SocketIOServer
+from werkzeug import secure_filename
 from werkzeug.wsgi import SharedDataMiddleware
 
 from games import *
@@ -42,9 +43,13 @@ PORT = 8080
 ##### FLASK ROUTES AND BASIC SETUP
 ##################################################
 
+UPLOAD_FOLDER = 'uploads'
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 app.debug = True
+
+def allowed_file(filename):
+  return '.' in filename and filename.rsplit('.', 1)[1] == 'py'
 
 def login_required(f):
   @functools.wraps(f)
@@ -58,6 +63,24 @@ def login_required(f):
 @app.route("/")
 def index():
   return render_template("index.html")
+
+@app.route("/code_submission", methods=['GET', 'POST'])
+def code_submission():
+  if request.method == 'POST':
+    file = request.files['file']
+    if file and allowed_file(file.filename):
+      filename = secure_filename(file.filename)
+      file.save(os.path.join(UPLOAD_FOLDER, filename))
+      f = open(os.path.join(UPLOAD_FOLDER, filename + '.submit'), 'w+')
+      f.write('email: ' + request.form['email'] + '\n')
+      f.write('author: ' + request.form['author'] + '\n')
+      f.write('Game name: ' + request.form['game_name'] + '\n')
+      return redirect(url_for('uploaded_file', filename=filename))
+  return render_template("submit_code.html")
+
+@app.route("/uploaded_file/<filename>")
+def uploaded_file(filename):
+  return render_template("uploaded_file.html", filename=filename)
 
 @app.route("/about_making_games")
 def documentation():
