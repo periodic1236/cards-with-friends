@@ -35,7 +35,7 @@ GAMES = {
     "HighestCard": HighestCard,
     "Spades": Spades,
 }
-PORT = 8080
+PORT = os.getenv("PORT", 8080)
 UPLOAD_FOLDER = "uploads"
 
 
