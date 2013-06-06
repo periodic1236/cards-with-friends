@@ -72,60 +72,6 @@ class Hearts(TrickTakingGame):
     start = "3C" if self.num_players == 5 else "2C"
     return next(i for i, p in enumerate(self.players) if any(c.name == start for c in p.hand))
 
-  def _GetPlayAndCheck(self, player):
-    card = None
-    # If the play leads the trick.
-    if not self.cards_played:
-      while True:
-        card = player.MaybeGetPlay()
-        # If hearts is broken, the play is fine regardless.
-        if self.hearts_broken:
-          break
-        # Cannot play queen of spades if hearts not broken.
-        if card.name == "QS":
-          self.WarnPlayer(player, card, "Hearts not broken")
-          player.AddToHand(card)
-          continue
-        # Check if can play hearts.
-        if card.suit == "hearts":
-          # If the player has only hearts, playing a heart is valid.
-          if all(c.suit == "hearts" for c in player.hand):
-            self.hearts_broken = True
-            break
-          self.WarnPlayer(player, card, "Hearts not broken")
-          player.AddToHand(card)
-          continue
-        # If card is not the queen of spades or a heart, the play is fine.
-        break
-    else:
-      while True:
-        card = player.MaybeGetPlay()
-        # Must follow suit if possible. If the suit matches, the play is valid.
-        if card.suit == self.cards_played[0].suit:
-          break
-        # If another card matches suit, cannot play this card.
-        if any(c.suit == self.cards_played[0].suit for c in player.hand):
-          self.WarnPlayer(player, card, "Must follow suit")
-          player.AddToHand(card)
-          continue
-        # Cannot play queen of spades the first trick.
-        if card.name == "QS" and not self.trick_num:
-          self.WarnPlayer(player, card, "Cannot play queen of spades on the first trick")
-          player.AddToHand(card)
-          continue
-        # Cannot play hearts the first trick unless hand is all hearts.
-        if card.suit == "hearts" and not self.trick_num:
-          if all(c.suit == "hearts" for c in player.hand):
-            self.hearts_broken = True
-            break
-          self.WarnPlayer(player, card, "Cannot play hearts on the first trick")
-          player.AddToHand(card)
-          continue
-        if card.suit == "hearts" and not self.hearts_broken:
-          self.hearts_broken = True
-        break
-    return card
-
   def _GetTrickWinner(self):
     """Determine who won the most recent trick."""
     leader = self.cards_played[0].suit
