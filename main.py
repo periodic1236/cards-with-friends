@@ -37,7 +37,7 @@ GAMES = {
 }
 try:
   PORT = int(os.getenv("PORT"))
-except ValueError:
+except (TypeError, ValueError):
   PORT = 5000
 UPLOAD_FOLDER = "uploads"
 
@@ -543,7 +543,7 @@ def Register():
 
 Register()
 app = SharedDataMiddleware(app, {
-   "/": os.path.join(os.path.dirname(__file__), "static")
+    "/": os.path.join(os.path.dirname(__file__), "static")
 })
 
 
