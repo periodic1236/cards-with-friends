@@ -73,7 +73,7 @@ class HighestCard(TrickTakingGame):
 
   def _GetValidPlay(self, player):
     """Get a valid move from the given player."""
-    card = player.GetPlay(*self._GetValidMoves(player))
+    card = player.GetPlay(*self._GetValidMoves(player))[0]
     return card
 
   def _IsTerminal(self):
