@@ -86,7 +86,7 @@ def uploaded_file(filename):
 
 @app.route("/about_making_games")
 def documentation():
-  return render_template("doc/html/index.html")
+  return redirect(url_for('static', filename='doc/html/index.html'))
 
 @app.route("/game_table")
 @login_required
