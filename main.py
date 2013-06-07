@@ -515,7 +515,7 @@ class Room(object):
       p.my_room = None
 
   def StartGame(self):
-    self.game_id = self.manager.CreateGame(self.game_name, self.players)
+    self.game_id = self.manager.CreateGame(self.game_name, self.players)[0]
     for p in self.players:
       CardNamespace.players[p].emit('go_to_game_table')
     while False in [CardNamespace.players[p].ready for p in self.players]:
