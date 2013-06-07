@@ -31,9 +31,9 @@ from pylib.mixins import MessageMixin
 
 
 GAMES = {
-    "Hearts": Hearts,
-    "HighestCard": HighestCard,
-    "Spades": Spades,
+    "Hearts": (Hearts, [3, 4, 5]),
+    "HighestCard": (HighestCard, [2]),
+    "Spades": (Spades, [4]),
 }
 try:
   PORT = int(os.getenv("PORT"))
@@ -246,7 +246,7 @@ class GameManager(MessageMixin):
       raise ValueError("Game '{}' not found or not supported".format(game))
 
     objs = [Player(name) for name in players]
-    game = GAMES[game_type](objs)
+    game = GAMES[game_type][0](objs)
 
     self.games[game.id] = game
     self.players.update((p.id, p) for p in objs)
@@ -259,6 +259,11 @@ class GameManager(MessageMixin):
       return KeyError("Invalid game ID: {}".format(game_id))
     del self.games[game.id]
 
+  def GetGameCapacity(self, game_type):
+    if game_type not in GAMES:
+      raise ValueError("Game '{}' not found or not supported".format(game))
+    return set(GAMES[game_type][1])
+
   def StartGame(self, game_id):
     """Start a previously-created game."""
     if game_id not in self.games:
@@ -266,7 +271,6 @@ class GameManager(MessageMixin):
     game = self.games[game_id]
     results = game.PlayGame()
     self.Notify("game_ended", results=results)
-    # TODO(mqian): How do we deal with the number of winners?
 
   def _RecordScore(self, *args, **kwargs):
     raise NotImplementedError
@@ -286,10 +290,16 @@ class CardNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
   players = {}  # (static) dict of players (instances of CardNamespace), keys are nicknames
   passwords = {}
 
-  my_room = None  # room that this player has joined
-  isHost = 0  # 0 or 1 indicating whether this player is the host of my_room
-  nickname = ""
-  ready = False
+  def __init__(self, *args, **kwargs):
+    super(CardNamespace, self).__init__(*args, **kwargs)
+    self.my_room = None  # room that this player has joined
+    self.isHost = 0  # 0 or 1 indicating whether this player is the host of my_room
+    self.nickname = ""
+    self.ready = False
+    self.emit("set_game_list", {
+        "names": GAMES.keys(),
+        "capacities": dict((game, cap) for (game, (_, cap)) in GAMES.items()),
+    })
 
   # runs when client refreshes the page, keeps sockets up to date
   def on_reconnect(self, nickname, password):
@@ -474,6 +484,7 @@ class Room(object):
   def __init__(self, host, game_name, capacity):
     self.id = uuid.uuid4()
     self.host = host.nickname
+    self.manager = host.manager
     self.game_name = game_name
     self.players = [self.host]
     self.capacity = capacity
@@ -504,15 +515,13 @@ class Room(object):
       p.my_room = None
 
   def StartGame(self):
-    # TODO: start correct type of game (self.game_name)
-    # with correct number of players (self.capacity)
-    self.game = Hearts([Player(p) for p in self.players])
+    self.game_id = self.manager.CreateGame(self.game_name, self.players)
     for p in self.players:
       CardNamespace.players[p].emit('go_to_game_table')
     while False in [CardNamespace.players[p].ready for p in self.players]:
-      print [CardNamespace.players[p].ready for p in self.players]
+      print >>sys.stderr, [CardNamespace.players[p].ready for p in self.players]
       sleep(0.05)
-    g = Greenlet(self.game.PlayGame)
+    g = Greenlet(self.manager.StartGame, self.game_id)
     g.start()
     g.join()
 

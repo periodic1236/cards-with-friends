@@ -1,3 +1,5 @@
+var valid_games;
+
 // create new room
 function create_room() {
     game_name = $("#select_game").find('option:selected').attr('value');
@@ -121,17 +123,17 @@ function populate_num_player_list(num_players) {
 
 // get list of game names that can be played
 function get_game_names() {
-    // TODO
-    return ['Hearts', 'Spades', 'Bridge'];
+    return valid_games.names;
 }
 
 // get valid num_player list given a game name
 function get_valid_num_player_list(game_name) {
-    // TODO
-    if (game_name == 'Hearts') {
-        return [2, 3, 4, 5];
-    }
-    return [1, 2, 3, 4];
+    return valid_games.capacities[game_name];
+}
+
+// set global list of games that can be played
+function set_game_list(game_list) {
+    valid_games = game_list;
 }
 
 // called when the game starts
@@ -139,3 +141,5 @@ function get_valid_num_player_list(game_name) {
 socket.on('go_to_game_table', function() {
     window.location = '/game_table';
 });
+
+socket.on('set_game_list', set_game_list)
