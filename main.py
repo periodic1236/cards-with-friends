@@ -400,12 +400,13 @@ class CardNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
     # TODO: only send to players who are viewing list? (as opposed to playing game)
     for player in CardNamespace.players.itervalues():
       room_index = -1
-      if player is not None and player.my_room is not None:
-        if player.my_room in CardNamespace.rooms:
-          room_index = CardNamespace.rooms.index(player.my_room)
-        else:
-          print "Something is wrong with", player.nickname, player.my_room.id
-      player.emit("update_room_list", game_list, host_list, players_list, capacity_list, room_index, player.isHost)
+      if player is not None:
+        if player.my_room is not None:
+          if player.my_room in CardNamespace.rooms:
+            room_index = CardNamespace.rooms.index(player.my_room)
+          else:
+            print "Something is wrong with", player.nickname, player.my_room.id
+        player.emit("update_room_list", game_list, host_list, players_list, capacity_list, room_index, player.isHost)
 
   # create a room
   def on_create_room(self, game_name, num_players):
