@@ -18,6 +18,12 @@ class HighestCard(TrickTakingGame):
     super(HighestCard, self).__init__(players, deck or "standard")
     self.ResetGame()
 
+  @classmethod
+  def GetCardValue(cls, card):
+    """Return the value of a card as prescribed by this game."""
+    values = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 1]
+    suits = ["clubs", "diamonds", "spades", "hearts"]
+
   def PlayGame(self):
     """Play the game."""
     # Play until someone's score is >= 6.
