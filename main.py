@@ -401,7 +401,7 @@ class CardNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
   # create a room
   def on_create_room(self, game_name, num_players):
     if self.my_room is None:
-      self.my_room = Room(self, game_name, num_players)
+      self.my_room = Room(self, game_name, int(num_players))
       self.isHost = 1;
       CardNamespace.rooms.append(self.my_room)
       CardNamespace.update_all_room_lists()
