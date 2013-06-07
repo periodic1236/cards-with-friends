@@ -86,8 +86,7 @@ def uploaded_file(filename):
 
 @app.route("/about_making_games")
 def documentation():
-  #TODO write documentation page
-  return render_template("documentation.html")
+  return render_template("doc/html/index.html")
 
 @app.route("/game_table")
 @login_required
