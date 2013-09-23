@@ -22,24 +22,20 @@ class Spades(TrickTakingGame):
   def GetCardValue(cls, card):
     """Return the value of a card as prescribed by this game."""
     values = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 1]
-    return values.index(card.number) + (13 if card.suit == "spades" else 0)
-
-  @classmethod
-  def SortCards(cls, cards):
-    """Sort a list of cards by value. Returns an iterator."""
-    return iter(sorted(cards, key=cls.GetCardValue, reverse=True))
+    suits = ["hearts", "clubs", "diamonds", "spades"]
+    return values.index(card.number) + 13 * suits.index(card.suit)
 
   def PlayGame(self):
     """Play the game."""
-    # Play until a team's score is >= 500.
+    # Play until a team's score is >= 500 or <= -200.
     while not self._IsTerminal():
       # Reset hands, shuffle, and deal cards.
       self._NewRound()
       # Get bids from each player.
       self._Bid()
 
-      # Play 13 tricks.
-      for i in xrange(13):
+      # Play tricks until hands are empty.
+      while self.GetPlayerByIndex(self.lead).hand:
         self.trick_num += 1
         self.cards_played = []
         # Have each player play a valid card for the trick.
@@ -52,7 +48,7 @@ class Spades(TrickTakingGame):
         self.GetPlayerByIndex(self.lead).Take(*self.cards_played)
       # Calculate and add scores.
       self._ScoreRound()
-    return sorted(self._players, key=lambda x: x.score)
+    return sorted(self._players, key=lambda x: x.score, reverse=True)
 
   def ResetGame(self):
     """Reset the entire game state."""
@@ -79,11 +75,7 @@ class Spades(TrickTakingGame):
 
   def _GetValidBid(self, player):
     """Get a valid bid from the given player."""
-    return player.GetBid(*self._GetValidBidAmounts(player))
-
-  def _GetValidBidAmounts(self, player):
-    """Return a list of valid bids for the given player based on the current state."""
-    return ("Bid must be between 1 and 13, inclusive", list(xrange(1, 14)))
+    return player.GetBid("Must choose a bid between 1 and 13", [str(x) for x in xrange(1, 14)], int)
 
   def _GetValidMoves(self, player):
     """Get a valid move from the given player."""
@@ -111,14 +103,14 @@ class Spades(TrickTakingGame):
 
   def _GetValidPlay(self, player):
     """Get a valid move from the given player."""
-    card = player.GetPlay(*self._GetValidMoves(player))
+    card = player.GetPlay(*self._GetValidMoves(player))[0]
     if card.suit == "spades" and not self.spades_broken:
       self.spades_broken = True
     return card
 
   def _IsTerminal(self):
-    """Return True iff the game has ended. The game ends when a team's score is >= 500."""
-    return max(self.team_scores) >= 500
+    """Return True iff the game has ended. The game ends when a team has >= 500 or <= -200 pts."""
+    return max(self.team_scores) >= 500 or min(self.team_scores) <= -200
 
   def _NewRound(self):
     """Start a new round of the game."""
@@ -157,7 +149,3 @@ class Spades(TrickTakingGame):
       # Update individual player scores based on new team scores.
       self.players[i].score = self.team_scores[i]
       self.players[i + 2].score = self.team_scores[i]
-
-
-if __name__ == "__main__":
-  pass

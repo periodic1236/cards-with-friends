@@ -6,6 +6,9 @@
    <script type="text/javascript" 
      src="{{ url_for('static', filename='jquery.js') }}"></script>
    <script type="text/javascript"
+     src="{{ url_for('static', filename='jquery-ui-1.10.3.custom.js') }}">
+   </script>
+   <script type="text/javascript"
      src="{{ url_for('static', filename='socket.io.js') }}"></script>
    <script type="text/javascript"
      src="{{ url_for('static', filename='main.js') }}"></script>
@@ -13,8 +16,9 @@
      src="{{ url_for('static', filename='play_game.js') }}"></script>
    <script type="text/javascript">
      reconnect('{{ session.nickname }}', '{{ session.password|safe }}');
-     readyGame();
    </script>
+   <link rel="stylesheet" type="text/css"
+     href="{{ url_for('static', filename='jquery-ui-1.10.3.custom.css') }}" />
    <link rel="stylesheet" type="text/css" 
      href="{{ url_for('static', filename='main.css') }}" />
 
@@ -45,12 +49,10 @@
 	<div id="money">Money:</div>
 	<div id="score">Score:</div>
 </div>
-<form name="bid"> 
-    <select id="bids" name="bids" size="1">  
-    </select> 
-</form>
-<button onClick="returnBid()">Submit Bid</button>
+<select id="bids" name="bids" size="1"></select> 
+<div><button onClick="returnBid()">Submit Bid</button></div>
 <div id="messageBox">
 </div>
 </body>
+<script type="text/javascript">readyGame();</script>
 </html>

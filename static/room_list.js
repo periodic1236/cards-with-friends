@@ -1,6 +1,10 @@
+var valid_games;
+
 // create new room
 function create_room() {
-    socket.emit('create_room');
+    game_name = $("#select_game").find('option:selected').attr('value');
+    num_players = $("#select_players").find('option:selected').attr('value');
+    socket.emit('create_room', game_name, num_players);
 }
 
 // request list of rooms
@@ -14,14 +18,14 @@ function request_room_list() {
 // capacity_list: list of capacity of each room
 // my_room: index in above lists; which game this player has joined (or -1 if none)
 // host: 0 or 1 indicating whether you are the host of my_game
-socket.on('update_room_list', function(host_list, players_list, capacity_list, my_room, host) {
+socket.on('update_room_list', function(game_list, host_list, players_list, capacity_list, my_room, host) {
     var holder = document.getElementById('room_list');
     while (holder.hasChildNodes()) {
         holder.removeChild(holder.lastChild);
     }
     for (var i = 0; i < host_list.length; i++) {
         var newDiv = document.createElement('div');
-        newDiv.innerHTML = "Host: " + host_list[i] + "&nbsp;&nbsp;&nbsp;Players: " + players_list[i] + "/" + capacity_list[i] + "&nbsp;&nbsp;&nbsp;";
+        newDiv.innerHTML = "Game: " + game_list[i] + "&nbsp;&nbsp;&nbsp;Host: " + host_list[i] + "&nbsp;&nbsp;&nbsp;Players: " + players_list[i] + "/" + capacity_list[i] + "&nbsp;&nbsp;&nbsp;";
         holder.appendChild(newDiv);
         // if not joined a game, display a button for joining this game
         if (my_room < 0) {
@@ -72,15 +76,70 @@ socket.on('update_room_list', function(host_list, players_list, capacity_list, m
 
     // remove "new room" button if this player has joined a game
     if (my_room >= 0) {
-        document.getElementById('new_room_button').style.visibility="hidden";
+        document.getElementById('new_room_menu').style.visibility="hidden";
     }
     else {
-        document.getElementById('new_room_button').style.visibility="visible";
+        document.getElementById('new_room_menu').style.visibility="visible";
+        
+        games = get_game_names();
+        current_game = games[0];
+        num_players = get_valid_num_player_list(current_game);
+
+        // populate game list
+        var options = $("#select_game");
+	    options.empty();
+        for (i = 0; i < games.length; i++){
+		    opt = document.createElement('option');
+		    opt.value = games[i];
+		    opt.innerHTML = games[i];
+		    options.append(opt);
+	    }
+
+        // populate num_player list
+        populate_num_player_list(num_players);
+
+        // when game type changed, repopulate num_player list
+        $("#select_game").change(function(){
+            current_game = $(this).find('option:selected').attr('value');
+            num_players = get_valid_num_player_list(current_game);
+            populate_num_player_list(num_players);
+        });
+        
     }
 });
+
+// populate num_player list
+// num_players is a list of valid player numbers
+function populate_num_player_list(num_players) {
+    var nums = $("#select_players");
+    nums.empty();
+    for (i = 0; i < num_players.length; i++){
+	    num = document.createElement('option');
+	    num.value = num_players[i];
+	    num.innerHTML = num_players[i];
+	    nums.append(num);
+    }
+}
+
+// get list of game names that can be played
+function get_game_names() {
+    return valid_games.names;
+}
+
+// get valid num_player list given a game name
+function get_valid_num_player_list(game_name) {
+    return valid_games.capacities[game_name];
+}
+
+// set global list of games that can be played
+function set_game_list(game_list) {
+    valid_games = game_list;
+}
 
 // called when the game starts
 // redirect everyone in the room to the game table page
 socket.on('go_to_game_table', function() {
     window.location = '/game_table';
 });
+
+socket.on('set_game_list', set_game_list)
