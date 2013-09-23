@@ -13,15 +13,19 @@ class HighestCard(TrickTakingGame):
   """The Highest Card card game."""
 
   def __init__(self, players, deck=None):
-    print "Game Created"
     if len(players) != 2:
       raise ValueError("Highest Card is a 2-player game, got {} players".format(len(players)))
     super(HighestCard, self).__init__(players, deck or "standard")
     self.ResetGame()
 
+  @classmethod
+  def GetCardValue(cls, card):
+    """Return the value of a card as prescribed by this game."""
+    values = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 1]
+    suits = ["clubs", "diamonds", "spades", "hearts"]
+
   def PlayGame(self):
     """Play the game."""
-    print "PlayGame called"
     # Play until someone's score is >= 6.
     while not self._IsTerminal():
       # Reset hands, shuffle, and deal cards.
@@ -43,7 +47,7 @@ class HighestCard(TrickTakingGame):
         self.GetPlayerByIndex(self.lead).Take(*self.cards_played)
       # Calculate and add scores.
       self._ScoreRound()
-    return sorted(self._players, key=lambda x: x.score)
+    return sorted(self._players, key=lambda x: x.score, reverse=True)
 
   def ResetGame(self):
     """Reset the entire game state."""
@@ -69,7 +73,7 @@ class HighestCard(TrickTakingGame):
 
   def _GetValidPlay(self, player):
     """Get a valid move from the given player."""
-    card = player.GetPlay(*self._GetValidMoves(player))
+    card = player.GetPlay(*self._GetValidMoves(player))[0]
     return card
 
   def _IsTerminal(self):
@@ -95,7 +99,3 @@ class HighestCard(TrickTakingGame):
       scores[i] = len(p.taken) / self.num_players
     for p, score in zip(self.players, scores):
       p.AddToScore(score)
-
-
-if __name__ == "__main__":
-  pass

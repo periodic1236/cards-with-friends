@@ -1,3 +1,7 @@
+# Secret files
+config.py
+
+# Byte code
 *.py[cod]
 
 # C extensions

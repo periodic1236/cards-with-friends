@@ -15,13 +15,28 @@ class TrickTakingGame(Game):
   """A trick-taking game."""
 
   def __init__(self, players, deck):
+    """Constructor.
+
+    Args:
+      players: A list of Player objects.
+      deck: The name of the deck for this game.
+    """
     super(TrickTakingGame, self).__init__(players, deck)
 
+  @classmethod
+  def GetCardValue(cls, *args, **kwargs):
+    raise NotImplementedError("This method should be implemented by users.")
+
+  @classmethod
+  def SortCards(cls, cards, reverse=True):
+    """Sort a list of cards by value. Returns an iterator."""
+    return iter(sorted(cards, key=cls.GetCardValue, reverse=reverse))
+
   def PlayGame(self, *args, **kwargs):
-    raise NotImplementedError("This class should be implemented by users.")
+    raise NotImplementedError("This method should be implemented by users.")
 
   def ResetGame(self, *args, **kwargs):
-    raise NotImplementedError("This class should be implemented by users.")
+    raise NotImplementedError("This method should be implemented by users.")
 
   def _DealCards(self, first, *patterns):
     """Deal cards to players.
@@ -40,54 +55,49 @@ class TrickTakingGame(Game):
       raise ValueError("Player '{}' not found in this game".format(first.name))
     if len(self.deck) < sum(i * sum(j) for i, j in patterns):
       raise ValueError("Not enough cards for the given deal pattern")
+    drawn = collections.defaultdict(set)
     for num_phases, pattern in patterns:
       for _ in xrange(num_phases):
         for num_cards in pattern:
-          self.GetPlayerByIndex(deal_idx).AddToHand(*self.deck.Draw(num_cards))
+          drawn[self.GetPlayerByIndex(deal_idx)] |= set(self.deck.Draw(num_cards))
           deal_idx += 1
+    for player, cards in drawn.items():
+      player.AddToHand(*self.SortCards(cards, reverse=False))
 
   def _EvaluateTrick(self, *args, **kwargs):
-    raise NotImplementedError("This class should be implemented by users.")
+    raise NotImplementedError("This method should be implemented by users.")
 
   def _GetFirstPlayer(self, *args, **kwargs):
-    raise NotImplementedError("This class should be implemented by users.")
+    raise NotImplementedError("This method should be implemented by users.")
 
   def _IsTerminal(self, *args, **kwargs):
-    raise NotImplementedError("This class should be implemented by users.")
+    raise NotImplementedError("This method should be implemented by users.")
 
   def _NewRound(self, *args, **kwargs):
-    raise NotImplementedError("This class should be implemented by users.")
+    raise NotImplementedError("This method should be implemented by users.")
 
   def _PassCards(self, *patterns):
-    """Pass cards between players, perhaps simultaneously.
+    """Pass cards between players.
+    Args:
+      patterns: Tuples of the form (from, to, # cards[, list of valid cards]).
+    Usage:
+      self.PassCards(...)
     """
-  #   Args:
-  #     patterns: Tuples of the form (from, to, # cards[, list of valid cards]).
-  #   Usage:
-  #     self.PassCards(...)
-  #   """
-  #   accum = collections.defaultdict(set)
+    accum = collections.defaultdict(set)
 
-  #   def get_callback(player):
-  #     def callback(cards, player=player):
-  #       if not isinstance(cards, collections.Iterable):
-  #         cards = [cards]
-  #       with self._condition:
-  #         accum[player] |= set(cards)
-  #         self._condition.notify()
-  #     return callback
+    def process(from_, to, num_cards, valid=None):
+      valid = list(from_.hand) if valid is None else list(valid)
+      message = "Select {} cards to pass to {}".format(num_cards, to.name)
+      self.Notify("display_message", player=from_.name, message=message)
+      cards = from_.GetCard("Cannot pass selected card", valid, num_cards)
+      if not isinstance(cards, collections.Iterable):
+        cards = [cards]
+      accum[to] |= set(cards)
 
-  #   def process(from_, to, num_cards, valid=None):
-  #     valid = list(from_.hand) if valid is None else list(valid)
-  #     self._manager.Add(from_.GetPlay, None, valid, num_cards, get_callback(to))
-
-  #   for pattern in patterns:
-  #     process(*pattern)
-  #   with self._condition:
-  #     while len(accum) < len(patterns):
-  #       self._condition.wait()
-  #     for to, cards in accum.items():
-  #       to.AddToHand(*cards)
+    for pattern in patterns:
+      process(*pattern)
+    for to, cards in accum.items():
+      to.AddToHand(*self.SortCards(cards, reverse=False))
 
 
 if __name__ == "__main__":

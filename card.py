@@ -52,9 +52,11 @@ class Card(object):
     return self._long_name
 
   def Flip(self):
+    """Flip the card between face up and face down."""
     self.faceup = not self.faceup
 
   def GetImage(self):
+    """Get the image of the card"""
     return Image.open(self.image_loc)
 
   @property

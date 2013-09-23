@@ -6,6 +6,7 @@
 
 __author__ = "ding@caltech.edu (David Ding)"
 
+from pylib import utils
 from trick_taking_game import TrickTakingGame
 
 
@@ -27,12 +28,8 @@ class Hearts(TrickTakingGame):
   def GetCardValue(cls, card):
     """Return the value of a card as prescribed by this game."""
     values = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 1]
-    return values.index(card.number)
-
-  @classmethod
-  def SortCards(cls, cards):
-    """Sort a list of cards by value. Returns an iterator."""
-    return iter(sorted(cards, key=cls.GetCardValue, reverse=True))
+    suits = ["clubs", "diamonds", "spades", "hearts"]
+    return values.index(card.number) + 13 * suits.index(card.suit)
 
   def PlayGame(self):
     """Play the game."""
@@ -40,12 +37,13 @@ class Hearts(TrickTakingGame):
     while not self._IsTerminal():
       # Reset hands, shuffle, and deal cards.
       self._NewRound()
-      # Pass cards left, right, across, or not at all based on the round number.
-      #self._Trade()
+      # Pass cards based on the round number and number of players in the game.
+      self._Trade()
+
       # Identify first player of the round.
       self.lead = self._FindFirstPlayer()
-      # Play 13 tricks.
-      for _ in xrange(13):
+      # Play tricks until hands are empty.
+      while self.GetPlayerByIndex(self.lead).hand:
         self.trick_num += 1
         self.cards_played = []
         # Have each player play a valid card for the trick.
@@ -74,60 +72,6 @@ class Hearts(TrickTakingGame):
     start = "3C" if self.num_players == 5 else "2C"
     return next(i for i, p in enumerate(self.players) if any(c.name == start for c in p.hand))
 
-  def _GetPlayAndCheck(self, player):
-    card = None
-    # If the play leads the trick.
-    if not self.cards_played:
-      while True:
-        card = player.MaybeGetPlay()
-        # If hearts is broken, the play is fine regardless.
-        if self.hearts_broken:
-          break
-        # Cannot play queen of spades if hearts not broken.
-        if card.name == "QS":
-          self.WarnPlayer(player, card, "Hearts not broken")
-          player.AddToHand(card)
-          continue
-        # Check if can play hearts.
-        if card.suit == "hearts":
-          # If the player has only hearts, playing a heart is valid.
-          if all(c.suit == "hearts" for c in player.hand):
-            self.hearts_broken = True
-            break
-          self.WarnPlayer(player, card, "Hearts not broken")
-          player.AddToHand(card)
-          continue
-        # If card is not the queen of spades or a heart, the play is fine.
-        break
-    else:
-      while True:
-        card = player.MaybeGetPlay()
-        # Must follow suit if possible. If the suit matches, the play is valid.
-        if card.suit == self.cards_played[0].suit:
-          break
-        # If another card matches suit, cannot play this card.
-        if any(c.suit == self.cards_played[0].suit for c in player.hand):
-          self.WarnPlayer(player, card, "Must follow suit")
-          player.AddToHand(card)
-          continue
-        # Cannot play queen of spades the first trick.
-        if card.name == "QS" and not self.trick_num:
-          self.WarnPlayer(player, card, "Cannot play queen of spades on the first trick")
-          player.AddToHand(card)
-          continue
-        # Cannot play hearts the first trick unless hand is all hearts.
-        if card.suit == "hearts" and not self.trick_num:
-          if all(c.suit == "hearts" for c in player.hand):
-            self.hearts_broken = True
-            break
-          self.WarnPlayer(player, card, "Cannot play hearts on the first trick")
-          player.AddToHand(card)
-          continue
-        if card.suit == "hearts" and not self.hearts_broken:
-          self.hearts_broken = True
-        break
-    return card
-
   def _GetTrickWinner(self):
     """Determine who won the most recent trick."""
     leader = self.cards_played[0].suit
@@ -140,10 +84,12 @@ class Hearts(TrickTakingGame):
     if not self.cards_played:
       # If this is also the first trick, only the two of clubs may be played.
       if self.trick_num == 1:
-        two_clubs = utils.FindCard(player.hand, name="2C")
-        if not two_clubs:
-          raise ValueError("Logic error! Player was expected to have the two of clubs.")
-        return ("Must lead with two of clubs", two_clubs)
+        start = "3C" if self.num_players == 5 else "2C"
+        twothree = "three of clubs" if self.num_players == 5 else "two of clubs"
+        card = utils.FindCard(player.hand, name=start)
+        if not card:
+          raise ValueError("Logic error! Player was expected to have the {}.".format(twothree))
+        return ("Must lead with {}".format(twothree), [card])
       # If hearts is broken, any play from the hand is valid.
       if self.hearts_broken:
         return (None, list(player.hand))
@@ -167,7 +113,7 @@ class Hearts(TrickTakingGame):
 
   def _GetValidPlay(self, player):
     """Get a valid move from the given player."""
-    card = player.GetPlay(*self._GetValidMoves(player))
+    card = player.GetPlay(*self._GetValidMoves(player))[0]
     if card.suit == "hearts" and not self.hearts_broken:
       self.hearts_broken = True
     return card
@@ -204,23 +150,13 @@ class Hearts(TrickTakingGame):
 
   def _Trade(self):
     """Trade cards between players. No trading occurs every 4th round."""
-    # TODO(ding): Add support for non-4-player games.
+    num_cards = 2 if self.num_players == 5 else 3
     if self.round_num % 4 == 1:
-      self._PassCards((self.players[0], self.players[1], 3),
-                      (self.players[1], self.players[2], 3),
-                      (self.players[2], self.players[3], 3),
-                      (self.players[3], self.players[0], 3))
+      self._PassCards(*((self.GetPlayerByIndex(i), self.GetPlayerByIndex(i + 1), num_cards)
+                        for i in xrange(self.num_players)))
     elif self.round_num % 4 == 2:
-      self._PassCards((self.players[0], self.players[3], 3),
-                      (self.players[1], self.players[0], 3),
-                      (self.players[2], self.players[1], 3),
-                      (self.players[3], self.players[2], 3))
-    elif self.round_num % 4 == 3:
-      self._PassCards((self.players[0], self.players[2], 3),
-                      (self.players[1], self.players[3], 3),
-                      (self.players[2], self.players[0], 3),
-                      (self.players[3], self.players[1], 3))
-
-
-if __name__ == "__main__":
-  pass
+      self._PassCards(*((self.GetPlayerByIndex(i), self.GetPlayerByIndex(i - 1), num_cards)
+                        for i in xrange(self.num_players)))
+    elif self.round_num % 4 == 3 and self.num_players == 4:
+      self._PassCards(*((self.GetPlayerByIndex(i), self.GetPlayerByIndex(i + 2), num_cards)
+                        for i in xrange(self.num_players)))

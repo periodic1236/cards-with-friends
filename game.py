@@ -11,22 +11,21 @@ import uuid
 from deck import Deck
 from player import Player
 from pylib import utils
+from pylib.mixins import MessageMixin
 
 _DECK_DIR = "decks"
 
 
-class Game(utils.MessageMixin):
+class Game(MessageMixin):
   """A card game."""
 
   def __init__(self, players, deck):
     """Constructor.
 
     Args:
-      players: A sequence of player names (expected to be unique).
+      players: A list of Player objects.
       deck: The name of the deck for this game.
     """
-    super(Game, self).__init__()
-
     # Container for state variables.
     self._state = utils.AttributeDict()
 
@@ -42,8 +41,8 @@ class Game(utils.MessageMixin):
     # The players of the game.
     if not players:
       raise ValueError("Players cannot be empty")
-    self._players = [Player(name) for name in players]
-    self._num_players = len(self.players)
+    self._players = players
+    self._num_players = len(players)
     self._dealer = None
 
   def __getattribute__(self, name):
@@ -65,15 +64,18 @@ class Game(utils.MessageMixin):
       object.__setattr__(self, name, value)
 
   def GetPlayerByIndex(self, index):
+    """Get a player in the list of players at the specified index (modulo the number of players)"""
     return self.players[index % self.num_players]
 
   def GetPlayerByName(self, name):
+    """Get a player by their name. If the player cannot be found, raise an error."""
     try:
       return next(player for player in self.players if player.name == name)
     except StopIteration:
       raise ValueError("Player '{}' not found in this game".format(name))
 
   def GetPlayerIndex(self, player):
+    """Get the index of a player given an instance of a player. If the player cannot be found, raise an error."""
     if not isinstance(player, (Player, int)):
       raise TypeError("player must be a Player or int, got type '{}'".format(type(player)))
     try:
@@ -82,7 +84,7 @@ class Game(utils.MessageMixin):
       raise ValueError("Player '{}' not found in this game".format(player.name))
 
   def ResetPlayers(self, score=None):
-    """Reset the state of every player."""
+    """Reset the state of every player: clear the hands and cards taken, and set the score of every player to the specified score."""
     for player in self.players:
       player.ClearHand()
       player.ClearTaken()
